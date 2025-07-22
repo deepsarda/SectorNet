@@ -1,16 +1,49 @@
 {
   "canisters": {
-    "backend": {
-      "main": "backend/app.mo",
+    "user_canister": {
       "type": "motoko",
-      "args": "--enhanced-orthogonal-persistence"
+      "main": "backend/user_canister/main.mo"
+    },
+    "sector_factory_canister": {
+      "type": "motoko",
+      "main": "backend/sector_factory_canister/main.mo"
+    },
+    "sector_registry_canister": {
+      "type": "motoko",
+      "main": "backend/sector_registry_canister/main.mo"
+    },
+    "invite_canister": {
+      "type": "motoko",
+      "main": "backend/invite_canister/main.mo"
+    },
+    "sector_canister": {
+      "type": "motoko",
+      "main": "backend/sector_canister/main.mo"
+    },
+    "global_feed_canister": {
+      "type": "motoko",
+      "main": "backend/global_feed_canister/main.mo"
+    },
+    "governance_canister": {
+      "type": "motoko",
+      "main": "backend/governance_canister/main.mo"
     },
     "frontend": {
-      "dependencies": ["backend"],
+      "dependencies": [
+        "user_canister",
+        "sector_factory_canister",
+        "sector_registry_canister",
+        "invite_canister",
+        "sector_canister",
+        "global_feed_canister",
+        "governance_canister"
+      ],
       "frontend": {
         "entrypoint": "frontend/index.html"
       },
-      "source": ["frontend/dist"],
+      "source": [
+        "frontend/dist"
+      ],
       "type": "assets"
     }
   },

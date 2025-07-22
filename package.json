@@ -1,12 +1,35 @@
 {
-  "name": "hello_world",
-  "scripts": {
-    "build": "npm run build --workspaces --if-present",
-    "prebuild": "npm run prebuild --workspaces --if-present",
-    "dev": "npm run dev --workspaces --if-present"
-  },
-  "type": "module",
-  "workspaces": [
-    "frontend"
-  ]
+	"name": "sectornet-frontend",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+		"preview": "vite preview"
+	},
+	"dependencies": {
+		"@dfinity/agent-js": "^3.0.0",
+		"@dfinity/auth-client": "^3.0.0",
+		"@dfinity/candid": "^3.0.0",
+		"@dfinity/principal": "^3.0.0",
+		"react": "^19.1.0",
+		"react-dom": "^19.1.0",
+		"react-markdown": "^10.1.0",
+		"emoji-mart": "^5.6.0",
+		"zustand": "^5.0.6",
+		"daisyui": "^5.0.46",
+		"tailwindcss": "^4.1.11"
+	},
+	"devDependencies": {
+		"@types/react": "^19.1.8",
+		"@types/react-dom": "^19.1.6",
+		"@vitejs/plugin-react": "^4.7.0",
+		"eslint": "^9.31.0",
+		"eslint-plugin-react": "^7.37.5",
+		"eslint-plugin-react-hooks": "^5.2.0",
+		"eslint-plugin-react-refresh": "^0.4.20",
+		"vite": "^7.0.5"
+	}
 }

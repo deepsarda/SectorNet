@@ -1,4 +1,7 @@
 # Motoko dependencies (https://mops.one/)
 
 [dependencies]
-base = "0.14.9"
+base = "0.14.14"
+stable-btreemap = "2.0.2"
+encoding = "0.4.0"
+itertools = "0.2.2"
