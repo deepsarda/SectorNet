@@ -56,9 +56,9 @@ actor class InviteCanister(initial_owner: Principal, initial_factory: Principal)
     };
 
     public shared(msg) func set_factory_canister(id: Principal): async Result.Result<(), Text> {
-        if (!is_owner(msg.caller)) { return Result.Err("Unauthorized"); };
+        if ( not is_owner(msg.caller)) { return #err("Unauthorized"); };
         factory_canister_id := id;
-        return Result.Ok(());
+        return #ok(());
     };
 
     // ==================================================================================================
@@ -86,17 +86,17 @@ actor class InviteCanister(initial_owner: Principal, initial_factory: Principal)
 
         // Authorization: Only authorized Sector Canisters can create codes.
         if (authorized_sectors.get(caller) == null) {
-            return Result.Err("Unauthorized: This canister is not an authorized private sector.");
+            return #err("Unauthorized: This canister is not an authorized private sector.");
         };
 
         // Pre-condition: Ensure the code isn't already in use.
         if (invite_codes.get(code) != null) {
-            return Result.Err("Invite code is already taken.");
+            return #err("Invite code is already taken.");
         };
 
         // Persist the mapping from the code to the calling Sector's Principal.
         invite_codes.put(code, caller);
-        return Result.Ok(());
+        return #ok(());
     };
 
     /**
@@ -109,15 +109,15 @@ actor class InviteCanister(initial_owner: Principal, initial_factory: Principal)
         switch (invite_codes.get(code)) {
             case (null) {
                 // It's fine if the code doesn't exist; the end state is the same.
-                return Result.Ok(());
+                return #ok(());
             };
             case (?sector_principal) {
                 // Authorization: Only the canister that originally created the code can revoke it.
                 if (caller != sector_principal) {
-                    return Result.Err("Unauthorized: You do not own this invite code.");
+                    return #err("Unauthorized: You do not own this invite code.");
                 };
                 invite_codes.delete(code);
-                return Result.Ok(());
+                return #ok(());
             };
         };
     };

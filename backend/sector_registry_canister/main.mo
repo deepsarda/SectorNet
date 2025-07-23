@@ -45,9 +45,9 @@ actor SectorRegistryCanister {
     };
 
     public shared(msg) func set_factory_canister(id: Principal): async Result.Result<(), Text> {
-        if (!is_owner(msg.caller)) { return Result.Err("Unauthorized: Only owner can set factory ID."); };
+        if (!is_owner(msg.caller)) { return #err("Unauthorized: Only owner can set factory ID."); };
         factory_canister_id := id;
-        return Result.Ok(());
+        return #ok(());
     };
 
     // ==================================================================================================
@@ -61,13 +61,13 @@ actor SectorRegistryCanister {
     */
     public shared(msg) func register_sector(info: SectorInfo): async Result.Result<(), Text> {
         if (msg.caller != factory_canister_id) {
-            return Result.Err("Unauthorized: Only the Sector Factory can register new sectors.");
+            return #err("Unauthorized: Only the Sector Factory can register new sectors.");
         };
         if (sectors.get(info.id) != null) {
-            return Result.Err("Sector already registered.");
+            return #err("Sector already registered.");
         };
         sectors.put(info.id, info);
-        return Result.Ok(());
+        return #ok(());
     };
 
     /**
@@ -78,15 +78,15 @@ actor SectorRegistryCanister {
     public shared(msg) func update_sector_listing(info: SectorInfo): async Result.Result<(), Text> {
         // The primary check: the caller must be the Sector Canister itself.
         if (msg.caller != info.id) {
-            return Result.Err("Unauthorized: Caller is not the sector it's trying to update.");
+            return #err("Unauthorized: Caller is not the sector it's trying to update.");
         };
         switch(sectors.get(info.id)) {
-            case (null) { return Result.Err("Sector not found in registry."); };
+            case (null) { return #err("Sector not found in registry."); };
             case (?oldInfo) {
                 // To prevent a sector from making itself vetted, we preserve the old `is_vetted` status.
                 let updatedInfo = { ...info, is_vetted = oldInfo.is_vetted };
                 sectors.put(info.id, updatedInfo);
-                return Result.Ok(());
+                return #ok(());
             };
         };
     };
@@ -97,13 +97,13 @@ actor SectorRegistryCanister {
      public shared(msg) func set_sector_vetted_status(sector_id: Principal, new_status: Bool): async Result.Result<(), Text> {
         // In a full implementation, this would check if caller is the Governance Canister.
         // For now, we'll restrict to owner.
-        if (!is_owner(msg.caller)) { return Result.Err("Unauthorized"); };
+        if (!is_owner(msg.caller)) { return #err("Unauthorized"); };
 
         switch(sectors.get(sector_id)) {
-            case (null) { return Result.Err("Sector not found."); };
+            case (null) { return #err("Sector not found."); };
             case (?info) {
                 sectors.put(sector_id, { ...info, is_vetted = new_status });
-                return Result.Ok(());
+                return #ok(());
             };
         };
      };

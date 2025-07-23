@@ -189,40 +189,40 @@ actor SectorCanister {
     // ==================================================================================================
 
     public shared(msg) func join(): async Result.Result<(), Text> {
-        if (config.is_private) { return Result.Err("This is a private sector. Use an invite code to join."); };
+        if (config.is_private) { return #err("This is a private sector. Use an invite code to join."); };
         
         let caller = msg.caller;
-        if (is_member(caller)) { return Result.Err("Already a member."); };
+        if (is_member(caller)) { return #err("Already a member."); };
 
         if (config.security_model == #HighSecurityE2EE) {
             if (members.size() >= HIGH_SECURITY_MEMBER_LIMIT) {
-                return Result.Err("Sector is at its maximum capacity for high-security mode.");
+                return #err("Sector is at its maximum capacity for high-security mode.");
             }
         };
 
         members.put(caller, #Member);
-        return Result.Ok(());
+        return #ok(());
     };
 
     public shared(msg) func join_with_invite(): async Result.Result<(), Text> {
-        if (not config.is_private) { return Result.Err("This is a public sector."); };
+        if (not config.is_private) { return #err("This is a public sector."); };
 
         let caller = msg.caller;
-        if (is_member(caller)) { return Result.Err("Already a member."); };
+        if (is_member(caller)) { return #err("Already a member."); };
 
         if (config.security_model == #HighSecurityE2EE) {
             if (members.size() >= HIGH_SECURITY_MEMBER_LIMIT) {
-                return Result.Err("Sector is at its maximum capacity for high-security mode.");
+                return #err("Sector is at its maximum capacity for high-security mode.");
             }
         };
 
         members.put(caller, #Member);
-        return Result.Ok(());
+        return #ok(());
     };
 
     public shared(msg) func leave(): async Result.Result<(), Text> {
         let caller = msg.caller;
-        if (not is_member(caller)) { return Result.Err("Not a member of this sector."); };
+        if (not is_member(caller)) { return #err("Not a member of this sector."); };
 
         members.delete(caller);
 
@@ -230,21 +230,21 @@ actor SectorCanister {
             rekey_required := true;
         };
 
-        return Result.Ok(());
+        return #ok(());
     };
 
     public shared(msg) func set_sector_role(target_user: Principal, new_role: SectorRole): async Result.Result<(), Text> {
-        if (not is_moderator(msg.caller)) { return Result.Err("Unauthorized: Only moderators can set roles."); };
-        if (target_user == config.owner) { return Result.Err("The sector owner's role cannot be changed."); };
-        if (target_user == msg.caller) { return Result.Err("Moderators cannot change their own role."); };
-        if (not is_member(target_user)) { return Result.Err("Target user is not a member of this sector."); };
+        if (not is_moderator(msg.caller)) { return #err("Unauthorized: Only moderators can set roles."); };
+        if (target_user == config.owner) { return #err("The sector owner's role cannot be changed."); };
+        if (target_user == msg.caller) { return #err("Moderators cannot change their own role."); };
+        if (not is_member(target_user)) { return #err("Target user is not a member of this sector."); };
         members.put(target_user, new_role);
-        return Result.Ok(());
+        return #ok(());
     };
 
     public shared(msg) func create_invite_code(): async Result.Result<Text, Text> {
-        if (not is_moderator(msg.caller)) { return Result.Err("Unauthorized: Only moderators can create invites."); };
-        if (not config.is_private) { return Result.Err("Cannot create invites for a public sector."); };
+        if (not is_moderator(msg.caller)) { return #err("Unauthorized: Only moderators can create invites."); };
+        if (not config.is_private) { return #err("Cannot create invites for a public sector."); };
 
         let random_bytes = await Random.blob();
         let code = Text.toText(Blob.encodeHex(random_bytes.slice(0, 4)));
@@ -253,8 +253,8 @@ actor SectorCanister {
         let result = await invite_actor.register_code(code);
 
         switch (result) {
-            case (Result.Ok()) { return Result.Ok(code); };
-            case (Result.Err(err)) { return Result.Err(err); };
+            case (#ok()) { return #ok(code); };
+            case (#err(err)) { return #err(err); };
         };
     };
 
@@ -263,7 +263,7 @@ actor SectorCanister {
     // ==================================================================================================
 
     public shared(msg) func create_post(encrypted_content_markdown: Blob, for_global_feed: Bool): async Result.Result<Nat64, Text> {
-        if (not is_poster(msg.caller)) { return Result.Err("Unauthorized: You do not have permission to post."); };
+        if (not is_poster(msg.caller)) { return #err("Unauthorized: You do not have permission to post."); };
 
         let id = next_post_id;
         next_post_id += 1;
@@ -278,19 +278,19 @@ actor SectorCanister {
         };
 
         posts.put(id, post);
-        return Result.Ok(id);
+        return #ok(id);
     };
 
     public shared(msg) func approve_global_post(post_id: Nat64, decrypted_content_markdown: Text): async Result.Result<(), Text> {
-        if (not is_moderator(msg.caller)) { return Result.Err("Unauthorized: Only moderators can approve global posts."); };
-        if (config.is_private) { return Result.Err("Cannot approve posts to global feed from a private sector."); };
+        if (not is_moderator(msg.caller)) { return #err("Unauthorized: Only moderators can approve global posts."); };
+        if (config.is_private) { return #err("Cannot approve posts to global feed from a private sector."); };
 
         let post = switch(posts.get(post_id)) {
-            case (null) { return Result.Err("Post not found."); };
+            case (null) { return #err("Post not found."); };
             case (?p) { p };
         };
 
-        if (post.status != #PendingGlobal) { return Result.Err("Post is not pending global approval."); };
+        if (post.status != #PendingGlobal) { return #err("Post is not pending global approval."); };
         
         let user_actor = actor (user_canister_id) : UserCanisterActor;
         let author_username = switch (await user_actor.get_profile_by_principal(post.author_principal)) {
@@ -307,11 +307,11 @@ actor SectorCanister {
         });
 
         switch(submission_result) {
-            case (Result.Err(err)) { return Result.Err("Failed to submit to global feed: " # err); };
-            case (Result.Ok(global_id)) {
+            case (#err(err)) { return #err("Failed to submit to global feed: " # err); };
+            case (#ok(global_id)) {
                 let updated_post = { ...post, status = #ApprovedGlobal, global_post_id = ?global_id };
                 posts.put(post_id, updated_post);
-                return Result.Ok(());
+                return #ok(());
             };
         };
     };
@@ -339,10 +339,10 @@ actor SectorCanister {
     // ==================================================================================================
 
     public shared(msg) func send_message(channel_name: Text, encrypted_content: Blob, key_epoch: Nat32): async Result.Result<(), Text> {
-        if (not is_member(msg.caller)) { return Result.Err("Unauthorized: Not a member of this sector."); };
+        if (not is_member(msg.caller)) { return #err("Unauthorized: Not a member of this sector."); };
 
         let channel = switch(channels.get(channel_name)) {
-            case (null) { return Result.Err("Channel not found."); };
+            case (null) { return #err("Channel not found."); };
             case (?c) { c };
         };
 
@@ -358,7 +358,7 @@ actor SectorCanister {
         };
 
         channel.put(id, message);
-        return Result.Ok(());
+        return #ok(());
     };
 
     public query func get_messages(channel_name: Text, limit: Nat, before_id: ?Nat64): async [Message] {
@@ -396,18 +396,18 @@ actor SectorCanister {
     };
 
     public shared(msg) func create_channel(channel_name: Text): async Result.Result<(), Text> {
-        if(not is_moderator(msg.caller)) { return Result.Err("Unauthorized"); };
-        if(channels.get(channel_name) != null) { return Result.Err("Channel already exists."); };
+        if(not is_moderator(msg.caller)) { return #err("Unauthorized"); };
+        if(channels.get(channel_name) != null) { return #err("Channel already exists."); };
         channels.put(channel_name, BTree.new(10));
-        return Result.Ok(());
+        return #ok(());
     };
     
     public shared(msg) func rotate_sector_key(key_batch: [(Principal, Blob)]): async Result.Result<(), Text> {
-        if (not is_moderator(msg.caller)) { return Result.Err("Unauthorized: Only moderators can rotate keys."); };
-        if (config.security_model != #HighSecurityE2EE) { return Result.Err("Key rotation is not applicable for standard security mode sectors."); };
+        if (not is_moderator(msg.caller)) { return #err("Unauthorized: Only moderators can rotate keys."); };
+        if (config.security_model != #HighSecurityE2EE) { return #err("Key rotation is not applicable for standard security mode sectors."); };
 
         if (key_batch.size() != members.size()) {
-            return Result.Err("Key batch size does not match the current number of sector members.");
+            return #err("Key batch size does not match the current number of sector members.");
         };
 
         let key_map: BTree.BTree<Principal, ()> = BTree.new(10);
@@ -416,19 +416,19 @@ actor SectorCanister {
         };
 
         if (key_map.size() != members.size()) {
-            return Result.Err("Duplicate principals found in key batch.");
+            return #err("Duplicate principals found in key batch.");
         };
 
         for ((member_principal, _) in members.entries()) {
             if (key_map.get(member_principal) == null) {
-                return Result.Err("Integrity check failed: Key batch does not contain a key for every member. Principal " # Principal.toText(member_principal) # " is missing.");
+                return #err("Integrity check failed: Key batch does not contain a key for every member. Principal " # Principal.toText(member_principal) # " is missing.");
             };
         };
 
         // --- SUCCESS ---
         rekey_required := false;
         current_key_epoch += 1; 
-        
-        return Result.Ok(());
+
+        return #ok(());
     };
 }

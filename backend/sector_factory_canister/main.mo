@@ -4,9 +4,9 @@ import Time "mo:base/Time";
 import BTree "mo:stableheapbtreemap/BTree";
 import Nat "mo:base/Nat";
 import Blob "mo:base/Blob";
-import Candid "mo:base/Candid";
 import ExperimentalCycles "mo:base/ExperimentalCycles";
 import IC "mo:base/ExperimentalInternetComputer";
+import Error "mo:base/Error";
 /**
 * The Sector Factory Canister is the sole authority for creating new Sector Canisters.
 * This centralized factory model is a key security feature. It allows the platform
@@ -48,11 +48,11 @@ actor SectorFactoryCanister {
     };
 
     // --- Stable State ---
-    stable var owner: Principal = Principal.anonymous();
-    stable var rate_limit_map: BTree.BTree<Principal, Time.Time> = BTree.new(10);
+    stable var owner: ?Principal = null;
+    stable var rate_limit_map: BTree.BTree<Principal, Time.Time> = BTree.init(10);
     stable var sector_wasm: ?Blob = null;
-    stable var registry_canister_id: Principal = Principal.anonymous();
-    stable var invite_canister_id: Principal = Principal.anonymous();
+    stable var registry_canister_id: ?Principal = null;
+    stable var invite_canister_id: ?Principal = null;
 
     // --- Constants ---
     let RATE_LIMIT_DURATION: Nat = 6 * 3_600 * 1_000_000_000; // 6 hours in nanoseconds
@@ -64,7 +64,7 @@ actor SectorFactoryCanister {
 
     // Initialize the canister with its owner.
     public init(initial_owner: Principal) {
-        owner := initial_owner;
+        owner = initial_owner;
     };
 
     private func is_owner(caller: Principal): Bool {
@@ -76,27 +76,27 @@ actor SectorFactoryCanister {
     * @param wasm_module The compiled Wasm code of the sector_canister.
     */
     public shared(msg) func set_sector_wasm(wasm_module: Blob): async Result.Result<(), Text> {
-        if (!is_owner(msg.caller)) { return Result.Err("Unauthorized: Only the owner can set the Wasm."); };
+        if (!is_owner(msg.caller)) { return #err("Unauthorized: Only the owner can set the Wasm."); };
         sector_wasm := ?wasm_module;
-        return Result.Ok(());
+        return #ok(());
     };
 
     /**
     * Sets the Principal of the Sector Registry Canister.
     */
     public shared(msg) func set_registry_canister(id: Principal): async Result.Result<(), Text> {
-        if (!is_owner(msg.caller)) { return Result.Err("Unauthorized"); };
+        if (!is_owner(msg.caller)) { return #err("Unauthorized"); };
         registry_canister_id := id;
-        return Result.Ok(());
+        return #ok(());
     };
 
     /**
     * Sets the Principal of the Invite Canister.
     */
     public shared(msg) func set_invite_canister(id: Principal): async Result.Result<(), Text> {
-        if (!is_owner(msg.caller)) { return Result.Err("Unauthorized"); };
+        if (!is_owner(msg.caller)) { return #err("Unauthorized"); };
         invite_canister_id := id;
-        return Result.Ok(());
+        return #ok(());
     };
 
 
@@ -120,11 +120,11 @@ actor SectorFactoryCanister {
 
         // Authorization & Pre-condition Checks
         if (caller == Principal.anonymous()) {
-            return Result.Err("Anonymous principal cannot create a sector.");
+            return #err("Anonymous principal cannot create a sector.");
         };
 
         switch (sector_wasm) {
-            case (null) { return Result.Err("Factory is not configured with a Wasm module yet."); };
+            case (null) { return #err("Factory is not configured with a Wasm module yet."); };
             case (_) {};
         };
 
@@ -132,7 +132,7 @@ actor SectorFactoryCanister {
         switch (rate_limit_map.get(caller)) {
             case (?last_creation) {
                 if (Nat.fromInt(now - last_creation) < RATE_LIMIT_DURATION) {
-                    return Result.Err("Rate limit exceeded. Please wait before creating another sector.");
+                    return #err("Rate limit exceeded. Please wait before creating another sector.");
                 };
             };
             case (null) {}; // No previous creation, proceed.
@@ -142,22 +142,22 @@ actor SectorFactoryCanister {
         let new_canister_result = await create_canister(INITIAL_SECTOR_CYCLES);
         let new_canister_principal: Principal;
         switch (new_canister_result) {
-            case (Result.Err(err)) { return Result.Err("Failed to create new canister: " # err); };
-            case (Result.Ok(p)) { new_canister_principal := p; };
+            case (#err(err)) { return #err("Failed to create new canister: " # err); };
+            case (#ok(p)) { new_canister_principal := p; };
         };
 
         // Install the SectorCanister code on the new instance
         switch (sector_wasm) {
-            case (null) { return Result.Err("Internal error: Wasm module disappeared."); }; // Should be unreachable
+            case (null) { return #err("Internal error: Wasm module disappeared."); }; // Should be unreachable
             case (?wasm) {
                 // The initial SectorConfig is passed as an encoded argument to the new canister's `init` function.
-                let install_arg = Candid.encode(config);
+                let install_arg = to_candid(config);
                 let install_result = await install_code(new_canister_principal, wasm, install_arg);
 
                 if (Result.isErr(install_result)) {
                     // This is a critical failure. We have an empty canister that we can't use.
                     // In a more advanced version, we might try to delete it.
-                    return Result.Err("Failed to install code on the new canister.");
+                    return #err("Failed to install code on the new canister.");
                 };
             };
         };
@@ -195,7 +195,7 @@ actor SectorFactoryCanister {
         rate_limit_map.put(caller, now);
 
         // Return the ID of the new Sector Canister
-        return Result.Ok(new_canister_principal);
+        return #ok(new_canister_principal);
     };
 
 
@@ -205,15 +205,15 @@ actor SectorFactoryCanister {
     // Creates a new canister with the specified amunt of cycles.
     private func create_canister(cycles_to_send: Nat): async Result.Result<Principal, Text> {
         if (ExperimentalCycles.available() < cycles_to_send) {
-            return Result.Err("Factory does not have enough cycles to create a new sector.");
+            return #err("Factory does not have enough cycles to create a new sector.");
         };
         ExperimentalCycles.add(cycles_to_send);
         let settings = null;
         try {
             let result = await IC.create_canister({ settings });
-            Result.Ok(result.canister_id)
+            #ok(result.canister_id)
         } catch (e) {
-            Result.Err("Failed to create canister: " # Error.message(e))
+            #err("Failed to create canister: " # Error.message(e))
         }
     }
 
@@ -235,9 +235,9 @@ actor SectorFactoryCanister {
                 mode = #install;
                 canister_id = canister_id;
             });
-            Result.Ok(())
+            #ok(())
         } catch (e) {
-            Result.Err("Failed to install code: " # Error.message(e))
+            #err("Failed to install code: " # Error.message(e))
         }
     }
 

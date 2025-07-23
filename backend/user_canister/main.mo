@@ -57,18 +57,18 @@ actor UserCanister {
     public shared(msg) func add_joined_sector(sector_id: Principal): async Result.Result<(), Text> {
         let caller = msg.caller;
         switch(profiles.get(caller)) {
-            case (null) { return Result.Err("Profile not found."); };
+            case (null) { return #err("Profile not found."); };
             case (?profile) {
                 // Check for duplicates
                 if (Array.find<Principal>(profile.joined_sectors, func(p) { p == sector_id }) != null) {
-                    return Result.Ok(()); // Already added, silent success
+                    return #ok(()); // Already added, silent success
                 }
                 
                 // Add the new sector ID to the list
                 let updated_sectors = Array.append(profile.joined_sectors, [sector_id]);
                 let updated_profile: Profile = { ...profile, joined_sectors = updated_sectors };
                 profiles.put(caller, updated_profile);
-                return Result.Ok(());
+                return #ok(());
             }
         }
     };
@@ -78,14 +78,14 @@ actor UserCanister {
      public shared(msg) func remove_joined_sector(sector_id: Principal): async Result.Result<(), Text> {
         let caller = msg.caller;
         switch(profiles.get(caller)) {
-            case (null) { return Result.Err("Profile not found."); };
+            case (null) { return #err("Profile not found."); };
             case (?profile) {
                 // Filter the array to remove the specified sector_id
                 let updated_sectors = Array.filter<Principal>(profile.joined_sectors, func(p) { p != sector_id });
 
                 let updated_profile: Profile = { ...profile, joined_sectors = updated_sectors };
                 profiles.put(caller, updated_profile);
-                return Result.Ok(());
+                return #ok(());
             }
         }
     };
@@ -109,17 +109,17 @@ actor UserCanister {
 
         // Authorization: Ensure the caller is not an anonymous identity.
         if (Principal.isAnonymous(caller)) {
-            return Result.Err("Anonymous principal not allowed.");
+            return #err("Anonymous principal not allowed.");
         };
 
         // Pre-condition: Check if a profile alreay exists for this Principal.
         if (profiles.get(caller) != null) {
-            return Result.Err("Profile already exists for this principal.");
+            return #err("Profile already exists for this principal.");
         };
 
         // Pre-condition: Check if the username is already taken.
         if (usernames.get(username) != null) {
-            return Result.Err("Username is already taken.");
+            return #err("Username is already taken.");
         };
 
         // Create the new profile object.
@@ -137,7 +137,7 @@ actor UserCanister {
         profiles.put(caller, new_profile);
         usernames.put(username, caller);
 
-        return Result.Ok(());
+        return #ok(());
     };
 
     /**
@@ -147,11 +147,11 @@ actor UserCanister {
     public shared(msg) func update_activity(): async Result.Result<(), Text> {
         let caller = msg.caller;
         switch (profiles.get(caller)) {
-            case (null) { return Result.Err("Profile not found."); };
+            case (null) { return #err("Profile not found."); };
             case (?profile) {
                 let updated_profile: Profile = { ...profile, last_seen_timestamp = Time.now() };
                 profiles.put(caller, updated_profile);
-                return Result.Ok(());
+                return #ok(());
             };
         };
     };
@@ -223,11 +223,11 @@ actor UserCanister {
     */
     public shared(msg) func add_admin(principal: Principal) : async Result.Result<(), Text> {
         // Auth: Only an existing admin can call this function.
-        if (!is_admin(msg.caller)) { return Result.Err("Unauthorized: Caller is not an admin."); };
+        if (!is_admin(msg.caller)) { return #err("Unauthorized: Caller is not an admin."); };
 
         // Pre-condition: Ensure the target user has a profile.
         switch (profiles.get(principal)) {
-            case (null) { return Result.Err("Target user does not have a profile."); };
+            case (null) { return #err("Target user does not have a profile."); };
             case (?profile) {
                 // Add to the admin list if not already present.
                 if (Array.find<Principal>(admins, func(p) { p == principal }) != null) {
@@ -240,7 +240,7 @@ actor UserCanister {
                 let updated_profile: Profile = { ...profile, tags = [#Admin] };
                 profiles.put(principal, updated_profile);
 
-                return Result.Ok(());
+                return #ok(());
             };
         };
     };
@@ -253,17 +253,17 @@ actor UserCanister {
     */
     public shared(msg) func set_user_tag(target_user: Principal, new_tag: UserTag) : async Result.Result<(), Text> {
         // Auth: Only an admin can set user tags.
-        if (!is_admin(msg.caller)) { return Result.Err("Unauthorized: Caller is not an admin."); };
+        if (!is_admin(msg.caller)) { return #err("Unauthorized: Caller is not an admin."); };
 
         // Fetch the profile to update.
         switch (profiles.get(target_user)) {
-            case (null) { return Result.Err("User profile not found."); };
+            case (null) { return #err("User profile not found."); };
             case (?profile) {
                 // Create a copy of the profile with the new tag and save it.
                 // This replaces any existing tags.
                 let updated_profile: Profile = { ...profile, tags = [new_tag] };
                 profiles.put(target_user, updated_profile);
-                return Result.Ok(());
+                return #ok(());
             };
         };
     };
