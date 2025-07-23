@@ -35,7 +35,7 @@ actor UserCanister {
     // A list of admins, controlled by the canister owner or a future DAO.
     stable var admins: [Principal] = [];
     // The canister owner, set on initialization, has ultimate authority.
-    stable var owner: Principal;
+    stable var owner: ?Principal = null;
 
 
     // ==================================================================================================
@@ -43,9 +43,9 @@ actor UserCanister {
     // ==================================================================================================
 
     public init(initial_owner: Principal) {
-        owner := initial_owner;
+        owner = initial_owner;
         // The owner is the first admin.
-        admins := [initial_owner];
+        admins = [initial_owner];
     };
 
     // ==================================================================================================

@@ -8,6 +8,7 @@ import Text "mo:base/Text";
 import Iter "mo:base/Iter";
 import Option "mo:base/Option";
 import ExperimentalCycles "mo:base/ExperimentalCycles";
+import Debug "mo:base/Debug";
 
 /**
 * The Governance Canister facilitates democratic control of the platform.
@@ -71,9 +72,29 @@ actor GovernanceCanister {
     // ==================================================================================================
 
     public func init(initial_owner: Principal, user_canister: Principal, global_feed_canister: Principal) {
-        owner = initial_owner;
-        user_canister_id = user_canister;
-        global_feed_canister_id = global_feed_canister;
+        owner := ?initial_owner;
+        user_canister_id := ?user_canister;
+        global_feed_canister_id := ?global_feed_canister;
+    };
+
+
+    // ==================================================================================================
+    // === Public Query Calls ===
+    // ==================================================================================================
+
+    public query func get_vote(vote_id: Nat64): async ?Vote {
+      return Array.find<Vote>(votes, func(v: Vote) { v.id == vote_id });
+    };
+
+    public query func get_active_votes(): async [Vote] {
+        var active_votes: [Vote] = [];
+        let now = Time.now();
+        for (vote in votes.vals()) {
+            if (not vote.is_tallied and now <= vote.end_timestamp) {
+                active_votes := Array.append(active_votes, [vote]);
+            };
+        };
+        return active_votes;
     };
 
     // ==================================================================================================
@@ -243,7 +264,10 @@ actor GovernanceCanister {
     * Checks if a user is eligible to vote based on account tenure and recent activity.
     */
     private func check_voter_eligibility(voter: Principal) : async Result.Result<(), Text> {
-        let user_canister_actor = actor(user_canister_id) : UserCanisterActor;
+        let user_canister_actor : UserCanisterActor = switch  user_canister_id {
+            case (?pid) actor (Principal.toText(pid)) : UserCanisterActor;
+            case null Debug.trap("user_canister_id is not set");
+          };
         let profile_opt = await user_canister_actor.get_profile_by_principal(voter);
 
         let profile = switch(profile_opt) {
@@ -253,13 +277,13 @@ actor GovernanceCanister {
 
         let now = Time.now();
 
-        // Check 1: Account Tenure
+        // Account Tenure
         let account_age = now - profile.created_at;
         if (account_age < MIN_ACCOUNT_TENURE_NS) {
             return #err("Account tenure is too new to vote.");
         };
 
-        // Check 2: Account Activity
+        // Account Activity
         let inactivity_duration = now - profile.last_seen_timestamp;
         if (inactivity_duration > MAX_ACCOUNT_INACTIVITY_NS) {
             return #err("Account has been inactive for too long to vote.");
@@ -267,24 +291,5 @@ actor GovernanceCanister {
 
         return #ok(());
     }
-
-    // ==================================================================================================
-    // === Public Query Calls ===
-    // ==================================================================================================
-
-    public query func get_vote(vote_id: Nat64): async ?Vote {
-        return Array.find(votes, func(v: Vote) { v.id == vote_id });
-    };
-
-    public query func get_active_votes(): async [Vote] {
-        var active_votes: [Vote] = [];
-        let now = Time.now();
-        for (vote in votes.vals()) {
-            if (not vote.is_tallied and now <= vote.end_timestamp) {
-                active_votes := Array.append(active_votes, [vote]);
-            };
-        };
-        return active_votes;
-    };
 
 }

@@ -119,7 +119,7 @@ actor SectorFactoryCanister {
         let now = Time.now();
 
         // Authorization & Pre-condition Checks
-        if (caller == Principal.anonymous()) {
+        if (Principal.isAnonymous(caller)) {
             return #err("Anonymous principal cannot create a sector.");
         };
 
