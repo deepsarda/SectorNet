@@ -1,0 +1,133 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+    themes: dark --prefersdark;
+};
+
+/* Fira Code Font Import */
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap');
+@theme {
+    /* -- FONT NAMESPACE -- */
+     --font-mono: "Fira Code", monospace;
+    /* -- COLOR NAMESPACE -- */
+    /* These now generate classes like bg-glassterm-bg, text-glassterm-accent */
+     --color-glassterm-bg: #0A041C;
+     --color-glassterm-panel: rgba(15, 23, 42, 0.4);
+     --color-glassterm-accent: #67E8F9;
+    /* cyan-300 */
+     --color-glassterm-accent-secondary: #E879F9;
+    /* fuchsia-400 */
+     --color-glassterm-border: rgba(103, 232, 249, 0.2);
+    /* -- ANIMATION NAMESPACE -- */
+    /* These now generate classes like animate-moveInCircle */
+     --animate-moveInCircle: moveInCircle 30s ease infinite;
+     --animate-moveVertical: moveVertical 40s ease infinite;
+     --animate-moveHorizontal: moveHorizontal 25s ease infinite;
+    /* Keyframes are defined globally, not within @theme */
+}
+
+ @keyframes moveInCircle {
+     '0%': {
+         transform: 'rotate(0deg)' 
+    }
+     '50%': {
+         transform: 'rotate(180deg)' 
+    }
+     '100%': {
+         transform: 'rotate(360deg)' 
+    }
+}
+@keyframes moveVertical {
+     '0%': {
+         transform: 'translateY(-50%)' 
+    }
+     '50%': {
+         transform: 'translateY(50%)' 
+    }
+    '100%': {
+         transform: 'translateY(-50%)' 
+    }
+}
+ @keyframes moveHorizontal {
+     '0%': {
+         transform: 'translateX(-50%) translateY(-10%)' 
+    }
+     '50%': {
+         transform: 'translateX(50%) translateY(10%)' 
+    }
+     '100%': {
+         transform: 'translateX(-50%) translateY(-10%)' 
+    }
+}
+ body {
+     font-family: 'Fira Code', monospace;
+     font-optical-sizing: auto;
+     font-style: normal;
+     background-color: var(--color-glassterm-bg);
+     overflow: hidden;
+    /* Prevent scrollbars from the background */
+}
+ .gradient-bg {
+     width: 100vw;
+     height: 100vh;
+     position: fixed;
+     overflow: hidden;
+     background: linear-gradient(40deg, var(--goo-color-bg1), var(--goo-color-bg2));
+     top: 0;
+     left: 0;
+     z-index: -10;
+}
+ .gradient-bg .gradients-container {
+     filter: url(#goo) blur(40px);
+     width: 100%;
+     height: 100%;
+}
+ .gradient-bg .g1, .g2, .g3, .g4, .g5 {
+     position: absolute;
+     mix-blend-mode: var(--goo-blending);
+     opacity: 0.8;
+}
+ .g1 {
+     background: radial-gradient(circle at center, rgba(var(--goo-color1), 0.8) 0, rgba(var(--goo-color1), 0) 50%) no-repeat;
+     width: var(--goo-circle-size);
+     height: var(--goo-circle-size);
+     top: calc(50% - var(--goo-circle-size) / 2);
+     left: calc(50% - var(--goo-circle-size) / 2);
+     animation: moveVertical 30s ease infinite;
+}
+ .g2 {
+     background: radial-gradient(circle at center, rgba(var(--goo-color2), 0.8) 0, rgba(var(--goo-color2), 0) 50%) no-repeat;
+     width: var(--goo-circle-size);
+     height: var(--goo-circle-size);
+     top: calc(50% - var(--goo-circle-size) / 2);
+     left: calc(50% - var(--goo-circle-size) / 2);
+     transform-origin: calc(50% - 400px);
+     animation: moveInCircle 20s reverse infinite;
+}
+ .g3 {
+     background: radial-gradient(circle at center, rgba(var(--goo-color3), 0.8) 0, rgba(var(--goo-color3), 0) 50%) no-repeat;
+     width: var(--goo-circle-size);
+     height: var(--goo-circle-size);
+     top: calc(50% - var(--goo-circle-size) / 2 + 200px);
+     left: calc(50% - var(--goo-circle-size) / 2 - 500px);
+     transform-origin: calc(50% + 400px);
+     animation: moveInCircle 40s linear infinite;
+}
+ .g4 {
+     background: radial-gradient(circle at center, rgba(var(--goo-color4), 0.8) 0, rgba(var(--goo-color4), 0) 50%) no-repeat;
+     width: var(--goo-circle-size);
+     height: var(--goo-circle-size);
+     top: calc(50% - var(--goo-circle-size) / 2);
+     left: calc(50% - var(--goo-circle-size) / 2);
+     transform-origin: calc(50% - 200px);
+     animation: moveHorizontal 40s ease infinite;
+}
+ .g5 {
+     background: radial-gradient(circle at center, rgba(var(--goo-color5), 0.8) 0, rgba(var(--goo-color5), 0) 50%) no-repeat;
+     width: calc(var(--goo-circle-size) * 2);
+     height: calc(var(--goo-circle-size) * 2);
+     top: calc(50% - var(--goo-circle-size));
+     left: calc(50% - var(--goo-circle-size));
+     transform-origin: calc(50% - 800px) calc(50% + 200px);
+     animation: moveInCircle 20s ease infinite;
+}
+ 
