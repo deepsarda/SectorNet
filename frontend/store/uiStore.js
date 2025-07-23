@@ -1,34 +1,40 @@
 import { create } from 'zustand';
 
-// This store manages the dynamic state of the UI panes
 const useUiStore = create((set) => ({
-    // State
-    isMobileNavOpen: false, // For the sliding menu on mobile
-    
-    // Represents what is shown in the main navigator (Pane 1)
-    // 'global' or a sectorId (Principal as Text)
-    activeNavigator: 'global', 
+  // --- STATE ---
 
-    // Represents what is selected in the contextual hub (Pane 2)
-    // e.g., 'feed', 'proposals', or a channelName
-    activeContext: 'feed',
+  // Manages the slide-out menu on mobile viewports
+  isMobileNavOpen: false,
 
-    // Actions
-    toggleMobileNav: () => set(state => ({ isMobileNavOpen: !state.isMobileNavOpen })),
-    closeMobileNav: () => set({ isMobileNavOpen: false }),
+  // Determines the primary context: 'global' or a sector's Principal ID as a string.
+  // This controls what Pane2 will display.
+  activeNavigator: 'global',
 
-    // Sets the primary context (e.g., user clicked on a Sector icon)
-    setNavigator: (navigatorId) => set({
-        activeNavigator: navigatorId,
-        activeContext: 'feed', // Default to feed view when switching context
-        isMobileNavOpen: false, // Close nav on selection
-    }),
+  // Determines the secondary context, like a specific feed or channel name.
+  // This controls what Pane3 will display.
+  activeContext: 'feed',
 
-    // Sets the secondary context (e.g., user clicked on a channel)
-    setContext: (context) => set({
-        activeContext: context,
-        isMobileNavOpen: false, // Close nav on selection
-    }),
+
+  // --- ACTIONS ---
+
+  // Toggles the mobile navigation pane
+  toggleMobileNav: () => set(state => ({ isMobileNavOpen: !state.isMobileNavOpen })),
+  
+  // Closes the mobile navigation, useful after a selection is made
+  closeMobileNav: () => set({ isMobileNavOpen: false }),
+
+  // Sets the primary navigator, resetting the secondary context to its default
+  setNavigator: (navigatorId) => set({
+    activeNavigator: navigatorId,
+    activeContext: 'feed', // Always default to the 'feed' view when switching sectors/global
+    isMobileNavOpen: false, // Close nav on selection
+  }),
+
+  // Sets the secondary context within the current navigator
+  setContext: (contextId) => set({
+    activeContext: contextId,
+    isMobileNavOpen: false, // Close nav on selection
+  }),
 }));
 
 export default useUiStore;

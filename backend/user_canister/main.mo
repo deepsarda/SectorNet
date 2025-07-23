@@ -1,7 +1,7 @@
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
 import Time "mo:base/Time";
-import BTree "mo:stable-btreemap/BTree";
+import BTree "mo:stableheapbtreemap/BTree";
 import Nat "mo:base/Nat";
 import Array "mo:base/Array";
 
@@ -24,6 +24,7 @@ actor UserCanister {
         created_at: Time.Time;
         last_seen_timestamp: Time.Time; // Updated on activity, used for governance quorum
         tags: [UserTag];
+        joined_sectors: [Principal]; 
     };
 
     // --- Stable State ---
@@ -46,6 +47,49 @@ actor UserCanister {
         // The owner is the first admin.
         admins := [initial_owner];
     };
+
+    // ==================================================================================================
+    // === Sector Management Functions ===
+    // ==================================================================================================
+
+    // This function allows a user to add a sector to their own profile.
+    // The frontend will call this right after a successful call to a Sector's `join()` method.
+    public shared(msg) func add_joined_sector(sector_id: Principal): async Result.Result<(), Text> {
+        let caller = msg.caller;
+        switch(profiles.get(caller)) {
+            case (null) { return Result.Err("Profile not found."); };
+            case (?profile) {
+                // Check for duplicates
+                if (Array.find<Principal>(profile.joined_sectors, func(p) { p == sector_id }) != null) {
+                    return Result.Ok(()); // Already added, silent success
+                }
+                
+                // Add the new sector ID to the list
+                let updated_sectors = Array.append(profile.joined_sectors, [sector_id]);
+                let updated_profile: Profile = { ...profile, joined_sectors = updated_sectors };
+                profiles.put(caller, updated_profile);
+                return Result.Ok(());
+            }
+        }
+    };
+
+    // This function allows a user to remove a sector from their list.
+    // The frontend will call this right after a successful call to a Sector's `leave()` method.
+     public shared(msg) func remove_joined_sector(sector_id: Principal): async Result.Result<(), Text> {
+        let caller = msg.caller;
+        switch(profiles.get(caller)) {
+            case (null) { return Result.Err("Profile not found."); };
+            case (?profile) {
+                // Filter the array to remove the specified sector_id
+                let updated_sectors = Array.filter<Principal>(profile.joined_sectors, func(p) { p != sector_id });
+
+                let updated_profile: Profile = { ...profile, joined_sectors = updated_sectors };
+                profiles.put(caller, updated_profile);
+                return Result.Ok(());
+            }
+        }
+    };
+    
 
 
     // ==================================================================================================
@@ -86,6 +130,7 @@ actor UserCanister {
             created_at = now;
             last_seen_timestamp = now;
             tags = [#User];
+            joined_sectors = []; 
         };
 
         // Persist the new profile and username mapping.

@@ -1,12 +1,12 @@
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
 import Time "mo:base/Time";
-import BTree "mo:stable-btreemap/BTree";
+import BTree "mo:stableheapbtreemap/BTree";
 import Nat "mo:base/Nat";
 import Blob "mo:base/Blob";
 import Candid "mo:base/Candid";
 import ExperimentalCycles "mo:base/ExperimentalCycles";
-import IC "mo:base/IC";
+import IC "mo:base/ExperimentalInternetComputer";
 /**
 * The Sector Factory Canister is the sole authority for creating new Sector Canisters.
 * This centralized factory model is a key security feature. It allows the platform

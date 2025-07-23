@@ -1,6 +1,6 @@
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
-import BTree "mo:stable-btreemap/BTree";
+import BTree "mo:stableheapbtreemap/BTree";
 import Nat "mo:base/Nat";
 import Text "mo:base/Text";
 import Iter "mo:base/Iter";

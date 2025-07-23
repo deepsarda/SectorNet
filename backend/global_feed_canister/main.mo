@@ -1,7 +1,7 @@
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
 import Time "mo:base/Time";
-import BTree "mo:stable-btreemap/BTree";
+import BTree "mo:stableheapbtreemap/BTree";
 import Nat "mo:base/Nat";
 import Nat64 "mo:base/Nat64";
 import Text "mo:base/Text";
@@ -61,7 +61,7 @@ actor GlobalFeedCanister {
     stable var admins: BTree.BTree<Principal, ()> = BTree.new(10);
     
     // --- Canister Dependencies & Owner ---
-    stable var owner: Principal;
+    stable var owner: Principal = Principal.anonymous();
     // The governance canister will have the authority to change ACLs.
     stable var governance_canister_id: ?Principal = null;
     
