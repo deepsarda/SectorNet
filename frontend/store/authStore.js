@@ -1,7 +1,6 @@
-// frontend/store/authStore.js
-
 import { create } from 'zustand';
 import { AuthClient } from "@dfinity/auth-client";
+import { Secp256k1KeyIdentity } from "@dfinity/identity-secp256k1";
 import { createActor } from '../services/ic';
 import cryptoService from '../services/cryptoService';
 
@@ -49,9 +48,30 @@ const useAuthStore = create((set, get) => ({
     const { authClient } = get();
     if (!authClient) return;
 
-    const identityProvider = process.env.DFX_NETWORK === "ic"
-      ? "https://identity.ic0.app/#authorize"
-      : `http://127.0.0.1:4943?canisterId=${process.env.CANISTER_ID_INTERNET_IDENTITY}`;
+    const isDevelopment = process.env.DFX_NETWORK !== "ic";
+
+    if (isDevelopment) {
+      // Use a fixed identity for development
+      const seed_phrase = "test test test test test test test test test test test junk";
+      const identity = Secp256k1KeyIdentity.fromSeedPhrase(seed_phrase);
+      
+      const principal = identity.getPrincipal();
+      const userCanister = createActor("user_canister", { agentOptions: { identity } });
+
+      set({ 
+        isAuthenticated: true, 
+        identity, 
+        principal, 
+        userCanister,
+        status: 'authenticated' 
+      });
+
+      await get().fetchUserProfile();
+      
+      return;
+    }
+
+    const identityProvider = "https://identity.ic0.app/#authorize";
 
     await authClient.login({
       identityProvider,

@@ -1,0 +1,25 @@
+type ChatSecurityModel = variant { HighSecurityE2EE; StandardAccessControl };
+type Error = variant {
+  CallFailed : text;
+  CreationFailed : text;
+  Unauthorized;
+  RateLimitExceeded;
+  ConfigError : text;
+  InstallFailed : text;
+};
+type Result = variant { Ok : principal; Err : Error };
+type Result_1 = variant { Ok; Err : Error };
+type SectorConfig = record {
+  security_model : ChatSecurityModel;
+  owner : principal;
+  name : text;
+  description : text;
+  is_private : bool;
+  abbreviation : text;
+};
+service : (principal) -> {
+  create_new_sector : (SectorConfig) -> (Result);
+  set_invite_canister : (principal) -> (Result_1);
+  set_registry_canister : (principal) -> (Result_1);
+  set_sector_wasm : (blob) -> (Result_1);
+}

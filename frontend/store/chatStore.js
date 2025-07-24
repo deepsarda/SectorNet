@@ -1,5 +1,3 @@
-// frontend/store/useChatStore.js
-
 import { create } from 'zustand';
 import { createActor } from '../services/ic';
 import useAuthStore from './authStore';

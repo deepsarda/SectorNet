@@ -99,15 +99,6 @@
       ]
     },
     "frontend": {
-      "dependencies": [
-        "user_canister",
-        "sector_factory_canister",
-        "sector_registry_canister",
-        "invite_canister",
-        "sector_canister",
-        "global_feed_canister",
-        "governance_canister"
-      ],
       "frontend": {
         "entrypoint": "frontend/index.html"
       },
