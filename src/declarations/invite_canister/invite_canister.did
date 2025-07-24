@@ -1,8 +1,0 @@
-type Result = variant { Ok; Err : text };
-service : (principal, principal) -> {
-  register_code : (text) -> (Result);
-  register_new_private_sector : (principal) -> ();
-  resolve_code : (text) -> (opt principal) query;
-  revoke_code : (text) -> (Result);
-  set_factory_canister : (principal) -> (Result);
-}

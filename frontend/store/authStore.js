@@ -132,6 +132,7 @@ const useAuthStore = create((set, get) => ({
       // On success, save the FULL keystore (including private key) to local storage
       await cryptoService.saveKeystoreToStorage();
       set({ hasCryptoIdentity: true });
+      window.location.reload();
       // Re-fetch profile to update the UI
       await get().fetchUserProfile(); 
     }
