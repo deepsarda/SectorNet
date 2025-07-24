@@ -105,13 +105,6 @@ This method is useful for understanding the inner workings of the deployment pro
     export REGISTRY_ID=$(dfx canister id sector_registry_canister)
     export INVITE_ID=$(dfx canister id invite_canister)
     export GOVERNANCE_ID=$(dfx canister id governance_canister)
-    export WASM_HEX=$(node -e "console.log(require('fs').readFileSync('target/wasm32-unknown-unknown/release/sector_canister.wasm').toString('hex'))")
-    ARG_FILE="wasm_arg.tmp"
-    echo "(blob \"$WASM_HEX\")" > "$ARG_FILE"
-    # Upload the sector_canister.wasm to the factory
-    dfx canister call sector_factory_canister set_sector_wasm --argument-file "$ARG_FILE"
-    rm "$ARG_FILE" # Clean up the temporary file
-
 
     # Link factory to other canisters
     dfx canister call sector_factory_canister set_registry_canister "(principal \"$REGISTRY_ID\")"

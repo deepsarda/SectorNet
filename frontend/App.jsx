@@ -3,7 +3,7 @@ import useAuthStore from './store/authStore';
 import AnimatedBackground from './components/layout/AnimatedBackground';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import LandingPage from './pages/LandingPage';
-import CreateProfileModal from './components/auth/CreateProfileModal';
+import CreateProfileModal from './components/modals/CreateProfileModal';
 import MainLayout from './components/layout/MainLayout'; 
 const App = () => {
   const { status, userProfile } = useAuthStore();

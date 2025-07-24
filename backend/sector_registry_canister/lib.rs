@@ -1,10 +1,10 @@
-use candid::{CandidType, Deserialize, Principal, Encode, Decode};
+use candid::{ CandidType, Deserialize, Principal, Encode, Decode };
 use ic_cdk::api::msg_caller;
 use ic_cdk_macros::*;
-use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
+use ic_stable_structures::memory_manager::{ MemoryId, MemoryManager, VirtualMemory };
 // Use the correct path for the 'Bound' enum
 use ic_stable_structures::storable::Bound;
-use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap, Storable};
+use ic_stable_structures::{ DefaultMemoryImpl, StableBTreeMap, Storable };
 use std::borrow::Cow;
 use std::cell::RefCell;
 
@@ -56,7 +56,6 @@ impl Storable for StorablePrincipal {
     };
 }
 
-
 impl Storable for SectorInfo {
     fn to_bytes(&self) -> Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
@@ -73,20 +72,17 @@ impl Storable for SectorInfo {
     const BOUND: Bound = Bound::Unbounded;
 }
 
-
-
 // Memory IDs for stable structures
 const SECTORS_MAP_MEMORY_ID: MemoryId = MemoryId::new(0);
 
 thread_local! {
-    static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
-        RefCell::new(MemoryManager::init(DefaultMemoryImpl::default()));
+    static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
+        MemoryManager::init(DefaultMemoryImpl::default())
+    );
 
     // The main directory of all public sectors
     static SECTORS: RefCell<StableBTreeMap<StorablePrincipal, SectorInfo, Memory>> = RefCell::new(
-        StableBTreeMap::init(
-            MEMORY_MANAGER.with(|m| m.borrow().get(SECTORS_MAP_MEMORY_ID))
-        )
+        StableBTreeMap::init(MEMORY_MANAGER.with(|m| m.borrow().get(SECTORS_MAP_MEMORY_ID)))
     );
 
     // Manually-persisted stable state
@@ -120,11 +116,16 @@ fn pre_upgrade() {
 #[post_upgrade]
 fn post_upgrade() {
     let (state,): (NonStableState,) = ic_cdk::storage::stable_restore().unwrap();
-    OWNER.with(|o| *o.borrow_mut() = state.owner);
-    FACTORY_CANISTER_ID.with(|id| *id.borrow_mut() = state.factory_canister_id);
-    GOVERNANCE_CANISTER_ID.with(|id| *id.borrow_mut() = state.governance_canister_id);
+    OWNER.with(|o| {
+        *o.borrow_mut() = state.owner;
+    });
+    FACTORY_CANISTER_ID.with(|id| {
+        *id.borrow_mut() = state.factory_canister_id;
+    });
+    GOVERNANCE_CANISTER_ID.with(|id| {
+        *id.borrow_mut() = state.governance_canister_id;
+    });
 }
-
 
 // ==================================================================================================
 // === Initialization & Setup (Owner Only) ===
@@ -132,33 +133,36 @@ fn post_upgrade() {
 
 #[init]
 fn init(initial_owner: Principal, initial_factory: Principal) {
-    OWNER.with(|o| *o.borrow_mut() = initial_owner);
-    FACTORY_CANISTER_ID.with(|id| *id.borrow_mut() = initial_factory);
+    OWNER.with(|o| {
+        *o.borrow_mut() = initial_owner;
+    });
+    FACTORY_CANISTER_ID.with(|id| {
+        *id.borrow_mut() = initial_factory;
+    });
     // The governance canister can be set post-init by the owner
-    GOVERNANCE_CANISTER_ID.with(|id| *id.borrow_mut() = initial_owner);
+    GOVERNANCE_CANISTER_ID.with(|id| {
+        *id.borrow_mut() = initial_owner;
+    });
 }
 
 fn is_owner() -> Result<(), Error> {
-    if msg_caller() != OWNER.with(|o| *o.borrow()) {
+    if msg_caller() != OWNER.with(|o| *o.borrow()) { Err(Error::Unauthorized) } else { Ok(()) }
+}
+
+fn is_governance() -> Result<(), Error> {
+    if msg_caller() != GOVERNANCE_CANISTER_ID.with(|id| *id.borrow()) {
         Err(Error::Unauthorized)
     } else {
         Ok(())
     }
 }
 
-fn is_governance() -> Result<(), Error> {
-    if msg_caller() != GOVERNANCE_CANISTER_ID.with(|id| *id.borrow()) {
-         Err(Error::Unauthorized)
-    } else {
-        Ok(())
-    }
-}
-
-
 #[update]
 fn set_factory_canister(id: Principal) -> Result<(), Error> {
     is_owner()?;
-    FACTORY_CANISTER_ID.with(|f_id| *f_id.borrow_mut() = id);
+    FACTORY_CANISTER_ID.with(|f_id| {
+        *f_id.borrow_mut() = id;
+    });
     Ok(())
 }
 
@@ -233,9 +237,10 @@ fn search_sectors(query_text: String) -> Vec<SectorInfo> {
     SECTORS.with(|s| {
         s.borrow()
             .values() // Use '.values()' for efficiency when keys are not needed.
-            .filter(|info|
-                info.name.to_lowercase().contains(&query_lower) ||
-                info.description.to_lowercase().contains(&query_lower)
+            .filter(
+                |info|
+                    info.name.to_lowercase().contains(&query_lower) ||
+                    info.description.to_lowercase().contains(&query_lower)
             )
             .collect()
     })

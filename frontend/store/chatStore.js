@@ -85,17 +85,23 @@ const useChatStore = create((set, get) => ({
         const { messages, activeSectorId, activeChannel } = get();
         if (!activeSectorId || !activeChannel) return;
         
-        const latestMessageId = messages.length > 0 ? messages[messages.length - 1].id : 0n;
+        // The ID of the last message, or a default string "0" if no messages exist.
+        // The canister expects a String, not a BigInt.
+        const latestMessageId = messages.length > 0 ? messages[messages.length - 1].id : "0";
 
         try {
             const actor = createActor('sector_canister', { canisterId: activeSectorId, agentOptions: { identity: useAuthStore.getState().identity }});
-            const newMessages = await actor.get_new_messages(activeChannel, latestMessageId);
+            // Call the new backend function with the correct arguments
+            const result = await actor.get_new_messages(activeChannel, latestMessageId);
 
-            if (newMessages.length > 0) {
+            if (result && 'Ok' in result && result.Ok.length > 0) {
+                // The result is already a vector of messages
+                const newMessages = result.Ok;
                 set(state => ({ messages: [...state.messages, ...newMessages]}));
             }
         } catch(err) {
-            console.warn("Polling failed:", err);
+            // It's better to log this as a warning, as polling can fail intermittently
+            console.warn("Polling for new messages failed:", err);
         }
       }, 3000); // Poll every 3 seconds
 

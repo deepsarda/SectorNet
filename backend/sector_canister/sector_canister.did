@@ -55,9 +55,11 @@ service : (SectorConfig, principal, principal, principal) -> {
   create_invite_code : () -> (Result_1);
   create_post : (blob, bool) -> (Result_1);
   get_crypto_state : () -> (CryptoState) query;
+  get_member_role : (principal) -> (opt SectorRole) query;
   get_members : () -> (Result_2) query;
   get_messages : (text, nat64, opt text) -> (Result_3) query;
   get_my_details : () -> (Result_4) query;
+  get_new_messages : (text, text) -> (Result_3) query;
   get_sector_feed : (nat64, nat64) -> (vec Post) query;
   join : () -> (Result);
   leave : () -> (Result);

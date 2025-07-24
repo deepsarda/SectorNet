@@ -12,6 +12,8 @@ echo "--------------------------------------------------------------------"
 # Initial Build and Principal Fetch
 echo -e "\n\033[1;33mStep 0: Performing initial build and fetching your Principal ID...\033[0m"
 
+cargo build --package sector_canister --target wasm32-unknown-unknown --release
+
 # Build all rust canisters first to ensure the .wasm files are available
 cargo build --target wasm32-unknown-unknown --release
 
@@ -67,16 +69,6 @@ export GOVERNANCE_ID=$(dfx canister id governance_canister)
 echo "  > Registry Canister ID: $REGISTRY_ID"
 echo "  > Invite Canister ID: $INVITE_ID"
 echo "  > Governance Canister ID: $GOVERNANCE_ID"
-
-# Upload the 'sector_canister' WASM to the factory
-echo "  > Uploading sector_canister.wasm to the factory..."
-WASM_HEX=$(node -e "console.log(require('fs').readFileSync('target/wasm32-unknown-unknown/release/sector_canister.wasm').toString('hex'))")
-ARG_FILE="wasm_arg.tmp"
-echo "(blob \"$WASM_HEX\")" > "$ARG_FILE"
-# Upload the sector_canister.wasm to the factory
-dfx canister call sector_factory_canister set_sector_wasm --argument-file "$ARG_FILE"
-rm "$ARG_FILE" # Clean up the temporary file
-
 # Tell the factory where the registry and invite canisters are
 echo "  > Linking factory to registry and invite canisters..."
 dfx canister call sector_factory_canister set_registry_canister "(principal \"$REGISTRY_ID\")"
@@ -88,7 +80,9 @@ dfx canister call global_feed_canister set_governance_canister "(principal \"$GO
 
 echo "✅ Canister wiring complete."
 
-
+echo "Adding Cycles to registry"
+dfx ledger fabricate-cycles $REGISTRY_ID
+echo "✅ Added Cycles complete."
 # Deploy the Frontend
 echo -e "\n\033[1;33mStep 4: Deploying the frontend canister...\033[0m"
 

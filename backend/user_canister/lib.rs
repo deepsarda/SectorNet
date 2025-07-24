@@ -1,8 +1,8 @@
-use candid::{CandidType, Deserialize, Principal, Encode, Decode};
-use ic_cdk::api::{msg_caller, time};
+use candid::{ CandidType, Deserialize, Principal, Encode, Decode };
+use ic_cdk::api::{ msg_caller, time };
 use ic_cdk_macros::*;
-use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
-use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap, Storable};
+use ic_stable_structures::memory_manager::{ MemoryId, MemoryManager, VirtualMemory };
+use ic_stable_structures::{ DefaultMemoryImpl, StableBTreeMap, Storable };
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -16,7 +16,6 @@ use ic_stable_structures::storable::Bound;
 // This wrapper allows Principal to be used as a key in StableBTreeMap.
 #[derive(CandidType, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct StorablePrincipal(pub Principal);
-
 
 #[derive(CandidType, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum UserTag {
@@ -58,7 +57,6 @@ impl Storable for Profile {
         Decode!(&bytes, Self).unwrap()
     }
 
-
     fn into_bytes(self) -> Vec<u8> {
         Encode!(&self).unwrap()
     }
@@ -85,14 +83,14 @@ impl Storable for StorablePrincipal {
     };
 }
 
-
 // Memory IDs for stable structures
 const PROFILES_MEMORY_ID: MemoryId = MemoryId::new(0);
 const USERNAMES_MEMORY_ID: MemoryId = MemoryId::new(1);
 
 thread_local! {
-    static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
-        RefCell::new(MemoryManager::init(DefaultMemoryImpl::default()));
+    static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
+        MemoryManager::init(DefaultMemoryImpl::default())
+    );
 
     // Primary profile store: Principal -> Profile
     static PROFILES: RefCell<StableBTreeMap<StorablePrincipal, Profile, Memory>> = RefCell::new(
@@ -131,8 +129,12 @@ fn pre_upgrade() {
 #[post_upgrade]
 fn post_upgrade() {
     let (state,): (NonStableState,) = ic_cdk::storage::stable_restore().unwrap();
-    OWNER.with(|o| *o.borrow_mut() = state.owner);
-    ADMINS.with(|a| *a.borrow_mut() = state.admins);
+    OWNER.with(|o| {
+        *o.borrow_mut() = state.owner;
+    });
+    ADMINS.with(|a| {
+        *a.borrow_mut() = state.admins;
+    });
 }
 
 // ==================================================================================================
@@ -141,8 +143,12 @@ fn post_upgrade() {
 
 #[init]
 fn init(initial_owner: Principal) {
-    OWNER.with(|o| *o.borrow_mut() = Some(initial_owner));
-    ADMINS.with(|a| { a.borrow_mut().insert(initial_owner); });
+    OWNER.with(|o| {
+        *o.borrow_mut() = Some(initial_owner);
+    });
+    ADMINS.with(|a| {
+        a.borrow_mut().insert(initial_owner);
+    });
 }
 
 fn is_admin() -> Result<(), Error> {
@@ -247,9 +253,9 @@ fn get_profile_by_principal(id: Principal) -> Option<Profile> {
 #[query]
 fn get_profile_by_username(username: String) -> Option<Profile> {
     USERNAMES.with(|u| {
-        u.borrow().get(&username).and_then(|principal| {
-            PROFILES.with(|p| p.borrow().get(&principal))
-        })
+        u.borrow()
+            .get(&username)
+            .and_then(|principal| { PROFILES.with(|p| p.borrow().get(&principal)) })
     })
 }
 
@@ -298,7 +304,6 @@ fn set_user_tag(target_user: Principal, new_tag: UserTag) -> Result<(), Error> {
         Ok(())
     })
 }
-
 
 // Export the interface for the smart contract.
 ic_cdk::export_candid!();

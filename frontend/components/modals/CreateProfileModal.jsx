@@ -34,7 +34,14 @@ const CreateProfileModal = ({ isVisible }) => {
     const result = await createProfile(username);
 
     if (result && 'Err' in result) {
-      setError(result.Err);
+      console.log(result)
+      const errorObject = result.Err;
+      // Get the first (and only) key from the error object, e.g., "AlreadyExists"
+      const errorKey = Object.keys(errorObject)[0]; 
+      // Get the value associated with that key, which is our error string.
+      const errorMessage = errorObject[errorKey];
+
+      setError(errorMessage);
       setIsLoading(false);
     }
     // On success, the store handles everything, and App.jsx will re-render,
@@ -43,7 +50,7 @@ const CreateProfileModal = ({ isVisible }) => {
 
   return (
     <dialog ref={dialogRef} className="modal bg-slate-900/50 backdrop-blur-sm">
-      <div className="modal-box bg-slate-800 border border-glassterm-border font-mono">
+      <div className="modal-box bg-slate-800/20 border border-glassterm-border font-mono">
         <h3 className="font-bold text-2xl text-slate-100">Finalize Registration</h3>
         <p className="py-4 text-slate-300">Choose a unique username. This will also generate your permanent cryptographic identity. This cannot be changed later.</p>
         

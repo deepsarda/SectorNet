@@ -1,22 +1,43 @@
 import React, { useEffect } from 'react';
 import useUiStore from '../../store/uiStore';
 import useSectorStore from '../../store/sectorStore';
+import useAuthStore from '../../store/authStore';
+import useSectorRegistryStore from '../../store/sectorRegistryStore'; 
+import useGlobalFeedStore from '../../store/globalFeedStore';
 
 const Pane2_ContextualHub = () => {
   const { activeNavigator, activeContext, setContext } = useUiStore();
-  const { activeSectorData, isDetailsLoading, fetchSectorDetails, error } = useSectorStore();
+  const { userProfile } = useAuthStore();
+  const { activeSectorData, fetchSectorDetails, isDetailsLoading: isSectorLoading, error: sectorError } = useSectorStore();
+  
+  const { publicSectors, fetchPublicSectorInfo, isLoading: isRegistryLoading } = useSectorRegistryStore();
+  const { setVettedStatus, isLoading: isVettingLoading } = useGlobalFeedStore();
 
-  // This effect will run whenever the user clicks a different sector in Pane 1
-  useEffect(() => {
-    if (activeNavigator !== 'global') {
-      fetchSectorDetails(activeNavigator);
+  const sectorId = activeNavigator !== 'global' ? activeNavigator : null;
+  const publicInfo = sectorId ? publicSectors.get(sectorId.toText()) : null;
+
+useEffect(() => {
+    if (sectorId) {
+      // Fetch both private details and public info when navigator changes
+      fetchSectorDetails(sectorId);
+      fetchPublicSectorInfo(sectorId);
     }
-  }, [activeNavigator, fetchSectorDetails]);
+  }, [sectorId, fetchSectorDetails, fetchPublicSectorInfo]);
+
+  const handleVettingToggle = async (e) => {
+    const newStatus = e.target.checked;
+    if (sectorId) {
+      await setVettedStatus(sectorId, newStatus);
+    }
+  }
+
+  const isModerator = activeSectorData?.my_role && 'Moderator' in activeSectorData.my_role;
+  const isAdmin = userProfile?.tags?.some(tag => 'Admin' in tag);
+  const isLoading = isSectorLoading || isRegistryLoading;
 
   const baseClasses = "cursor-pointer hover:text-glassterm-accent transition-colors duration-150";
   const activeClasses = "text-glassterm-accent";
-  //TODO: Implement sector search for public sector and join it
-  //<p>&gt; Search For Sectors</p>
+
   const renderGlobalContext = () => (
     <>
       <p onClick={() => setContext('feed')} className={activeContext === 'feed' ? activeClasses : baseClasses}>&gt; Global Feed</p>
@@ -26,17 +47,14 @@ const Pane2_ContextualHub = () => {
   );
 
   const renderSectorContext = () => {
-    if (isDetailsLoading) {
+    if (isLoading) {
       return <span className="loading loading-spinner loading-sm mx-auto mt-4"></span>;
     }
 
-    if (error || !activeSectorData) {
-      return <p className="text-red-400 text-xs p-2">{error || "Could not load sector."}</p>;
+    if (sectorError || !activeSectorData) {
+      return <p className="text-red-400 text-xs p-2">{sectorError || "Could not load sector."}</p>;
     }
     
-    // Check if the user is a Moderator based on the role object
-    const isModerator = 'Moderator' in activeSectorData.my_role;
-
     return (
       <>
         <h3 className="text-lg text-slate-200 mb-2">{activeSectorData.name}</h3>
@@ -51,9 +69,29 @@ const Pane2_ContextualHub = () => {
 
         {isModerator && (
            <>
-              <div className="divider before:bg-slate-700 after:bg-slate-700 my-2 text-slate-500 text-sm">[ ADMIN ]</div>
+              <div className="divider before:bg-slate-700 after:bg-slate-700 my-2 text-slate-500 text-sm">[ MODERATOR ]</div>
               <p onClick={() => setContext('management')} className={activeContext === 'management' ? activeClasses : baseClasses}>&gt; Sector Management</p>
            </>
+        )}
+
+        {isAdmin && (
+            <>
+                <div className="divider before:bg-red-800 after:bg-red-800 my-2 text-red-500 text-sm">[ PLATFORM ADMIN ]</div>
+                <div className="p-2 bg-red-900/20 border border-red-500/30 rounded-md">
+                    <div className="form-control">
+                        <label className="label cursor-pointer py-1">
+                            <span className="label-text text-slate-300">Vet for Global Feed</span> 
+                            <input 
+                              type="checkbox" 
+                              className="toggle toggle-sm toggle-error" 
+                              checked={publicInfo?.is_vetted || false}
+                              onChange={handleVettingToggle}
+                              disabled={isVettingLoading}
+                            />
+                        </label>
+                    </div>
+                </div>
+            </>
         )}
       </>
     );

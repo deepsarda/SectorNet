@@ -5,12 +5,14 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/solid';
 import Pane1_Navigator from './Pane1_Navigator';
 import Pane2_ContextualHub from './Pane2_ContextualHub';
 import Pane3_ContentDisplay from './Pane3_ContentDisplay';
-
+import CreateOrJoinSectorModal from '../modals/CreateOrJoinSectorModal';
 
 const MainLayout = () => {
-  const { isMobileNavOpen, toggleMobileNav } = useUiStore();
+  const { isMobileNavOpen, toggleMobileNav, isCreateJoinModalOpen, closeCreateJoinModal } = useUiStore();
+
 
   return (
+    <>
     <div className="p-2 sm:p-4 md:p-8 h-screen w-screen flex items-center justify-center">
       <div className="mockup-window border bg-glassterm-panel border-glassterm-border shadow-2xl shadow-cyan-500/10 w-full h-full flex flex-col backdrop-blur-lg">
         <div className="flex items-center justify-between px-4 py-2 bg-slate-800/20 border-b border-glassterm-border">
@@ -45,6 +47,9 @@ const MainLayout = () => {
         </div>
       </div>
     </div>
+    <CreateOrJoinSectorModal isVisible={isCreateJoinModalOpen} onClose={closeCreateJoinModal} />
+
+    </>
   );
 };
 

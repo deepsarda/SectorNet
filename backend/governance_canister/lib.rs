@@ -1,5 +1,5 @@
-use candid::{CandidType, Deserialize, Principal};
-use ic_cdk::api::{msg_caller, time};
+use candid::{ CandidType, Deserialize, Principal };
+use ic_cdk::api::{ msg_caller, time };
 use ic_cdk_macros::*;
 use std::cell::RefCell;
 
@@ -95,17 +95,39 @@ fn pre_upgrade() {
 #[post_upgrade]
 fn post_upgrade() {
     let (state,): (StableState,) = ic_cdk::storage::stable_restore().unwrap();
-    VOTES.with(|s| *s.borrow_mut() = state.votes);
-    NEXT_VOTE_ID.with(|s| *s.borrow_mut() = state.next_vote_id);
-    OWNER.with(|s| *s.borrow_mut() = state.owner);
-    USER_CANISTER_ID.with(|s| *s.borrow_mut() = state.user_canister_id);
-    GLOBAL_FEED_CANISTER_ID.with(|s| *s.borrow_mut() = state.global_feed_canister_id);
-    VOTE_DURATION_NS.with(|s| *s.borrow_mut() = state.vote_duration_ns);
-    INITIATION_FEE_CYCLES.with(|s| *s.borrow_mut() = state.initiation_fee_cycles);
-    MIN_ACCOUNT_TENURE_NS.with(|s| *s.borrow_mut() = state.min_account_tenure_ns);
-    MAX_ACCOUNT_INACTIVITY_NS.with(|s| *s.borrow_mut() = state.max_account_inactivity_ns);
-    QUORUM_PERCENTAGE.with(|s| *s.borrow_mut() = state.quorum_percentage);
-    MAJORITY_THRESHOLD_PERCENTAGE.with(|s| *s.borrow_mut() = state.majority_threshold_percentage);
+    VOTES.with(|s| {
+        *s.borrow_mut() = state.votes;
+    });
+    NEXT_VOTE_ID.with(|s| {
+        *s.borrow_mut() = state.next_vote_id;
+    });
+    OWNER.with(|s| {
+        *s.borrow_mut() = state.owner;
+    });
+    USER_CANISTER_ID.with(|s| {
+        *s.borrow_mut() = state.user_canister_id;
+    });
+    GLOBAL_FEED_CANISTER_ID.with(|s| {
+        *s.borrow_mut() = state.global_feed_canister_id;
+    });
+    VOTE_DURATION_NS.with(|s| {
+        *s.borrow_mut() = state.vote_duration_ns;
+    });
+    INITIATION_FEE_CYCLES.with(|s| {
+        *s.borrow_mut() = state.initiation_fee_cycles;
+    });
+    MIN_ACCOUNT_TENURE_NS.with(|s| {
+        *s.borrow_mut() = state.min_account_tenure_ns;
+    });
+    MAX_ACCOUNT_INACTIVITY_NS.with(|s| {
+        *s.borrow_mut() = state.max_account_inactivity_ns;
+    });
+    QUORUM_PERCENTAGE.with(|s| {
+        *s.borrow_mut() = state.quorum_percentage;
+    });
+    MAJORITY_THRESHOLD_PERCENTAGE.with(|s| {
+        *s.borrow_mut() = state.majority_threshold_percentage;
+    });
 }
 
 // ==================================================================================================
@@ -114,9 +136,15 @@ fn post_upgrade() {
 
 #[init]
 fn init(initial_owner: Principal, user_canister: Principal, global_feed_canister: Principal) {
-    OWNER.with(|o| *o.borrow_mut() = Some(initial_owner));
-    USER_CANISTER_ID.with(|id| *id.borrow_mut() = Some(user_canister));
-    GLOBAL_FEED_CANISTER_ID.with(|id| *id.borrow_mut() = Some(global_feed_canister));
+    OWNER.with(|o| {
+        *o.borrow_mut() = Some(initial_owner);
+    });
+    USER_CANISTER_ID.with(|id| {
+        *id.borrow_mut() = Some(user_canister);
+    });
+    GLOBAL_FEED_CANISTER_ID.with(|id| {
+        *id.borrow_mut() = Some(global_feed_canister);
+    });
 }
 
 // ==================================================================================================
@@ -160,7 +188,9 @@ async fn initiate_censor_vote(target_sector: Principal) -> Result<u64, String> {
     }
 
     let initiator = msg_caller();
-    check_voter_eligibility(initiator).await.map_err(|e| format!("Initiator does not meet voting eligibility requirements: {}", e))?;
+    check_voter_eligibility(initiator).await.map_err(|e|
+        format!("Initiator does not meet voting eligibility requirements: {}", e)
+    )?;
 
     let now = time();
     let id = NEXT_VOTE_ID.with(|id| {
@@ -194,26 +224,35 @@ async fn cast_vote(vote_id: u64, choice: VoteChoice) -> Result<(), String> {
     // Find the vote and its index.
     VOTES.with(|v| {
         let mut votes = v.borrow_mut(); // Now you can borrow_mut() on the RefCell
-        let vote = votes.iter_mut()
+        let vote = votes
+            .iter_mut()
             .find(|v| v.id == vote_id)
             .ok_or("Vote not found.")?;
 
         // Pre-condition checks
-        if vote.is_tallied { return Err("Vote has already been tallied.".to_string()); }
-        if now > vote.end_timestamp { return Err("Voting period has ended.".to_string()); }
+        if vote.is_tallied {
+            return Err("Vote has already been tallied.".to_string());
+        }
+        if now > vote.end_timestamp {
+            return Err("Voting period has ended.".to_string());
+        }
 
         // Check if already voted
         if vote.voters.iter().any(|(p, _)| *p == voter) {
             return Err("You have already voted.".to_string());
         }
-        
+
         // Record the vote
         vote.voters.push((voter, choice.clone()));
         match choice {
-            VoteChoice::For => vote.votes_for += 1,
-            VoteChoice::Against => vote.votes_against += 1,
+            VoteChoice::For => {
+                vote.votes_for += 1;
+            }
+            VoteChoice::Against => {
+                vote.votes_against += 1;
+            }
         }
-        
+
         Ok(())
     })?; // The ? will propagate the error out of the closure
 
@@ -229,45 +268,59 @@ async fn tally_vote(vote_id: u64) -> Result<String, String> {
     // Find the vote and check its status.
     let vote_to_tally = VOTES.with(|v| {
         let votes = v.borrow();
-        let vote = votes.iter()
+        let vote = votes
+            .iter()
             .find(|v| v.id == vote_id)
             .cloned() // Clone it so we can use it after the borrow ends
             .ok_or_else(|| "Vote not found.".to_string())?;
 
-        if vote.is_tallied { return Err("Vote has already been tallied.".to_string()); }
-        if now <= vote.end_timestamp { return Err("Voting period has not yet ended.".to_string()); }
-        
+        if vote.is_tallied {
+            return Err("Vote has already been tallied.".to_string());
+        }
+        if now <= vote.end_timestamp {
+            return Err("Voting period has not yet ended.".to_string());
+        }
+
         Ok(vote)
     })?;
 
     // Mark as tallied and proceed with logic
     VOTES.with(|v| {
         let mut votes = v.borrow_mut();
-        let vote = votes.iter_mut().find(|v| v.id == vote_id).unwrap(); // Safe to unwrap, we found it above
+        let vote = votes
+            .iter_mut()
+            .find(|v| v.id == vote_id)
+            .unwrap(); // Safe to unwrap, we found it above
         vote.is_tallied = true;
     });
 
     let total_votes = vote_to_tally.votes_for + vote_to_tally.votes_against;
-    
 
     // Quorum check (using a placeholder for total active users)
     // TODO: We need to make an inter-canister call to get this number.
-    let quorum_min_votes: u64 = 10; 
+    let quorum_min_votes: u64 = 10;
     if total_votes < quorum_min_votes {
         return Ok("Vote failed to meet quorum.".to_string());
     }
 
     // Majority check
     let majority_threshold = MAJORITY_THRESHOLD_PERCENTAGE.with(|p| *p.borrow());
-    if total_votes > 0 && (vote_to_tally.votes_for * 100 / total_votes) >= majority_threshold {
+    if total_votes > 0 && (vote_to_tally.votes_for * 100) / total_votes >= majority_threshold {
         // Censor vote PASSED. Execute the outcome.
-        let global_feed_canister = GLOBAL_FEED_CANISTER_ID.with(|id| id.borrow().expect("Global Feed Canister ID not set."));
-        let call_result: Result<(Result<(), String>,), _> = ic_cdk::call(global_feed_canister, "set_sector_vetted_status", (vote_to_tally.target_sector, false)).await;
-        
+        let global_feed_canister = GLOBAL_FEED_CANISTER_ID.with(|id|
+            id.borrow().expect("Global Feed Canister ID not set.")
+        );
+        let call_result: Result<(Result<(), String>,), _> = ic_cdk::call(
+            global_feed_canister,
+            "set_sector_vetted_status",
+            (vote_to_tally.target_sector, false)
+        ).await;
+
         match call_result {
             Ok((Ok(()),)) => Ok("Vote passed. Sector has been de-vetted.".to_string()),
             Ok((Err(err),)) => Err(format!("Vote passed, but failed to execute: {}", err)),
-            Err((code, msg)) => Err(format!("Vote passed, but canister call failed ({:?}): {}", code, msg)),
+            Err((code, msg)) =>
+                Err(format!("Vote passed, but canister call failed ({:?}): {}", code, msg)),
         }
     } else {
         // Censor vote FAILED.
@@ -281,14 +334,22 @@ async fn tally_vote(vote_id: u64) -> Result<String, String> {
 
 async fn check_voter_eligibility(voter: Principal) -> Result<(), String> {
     let canister_id = USER_CANISTER_ID.with(|id| id.borrow().expect("User Canister ID not set."));
-    let response: Result<(Option<UserProfile>,), _> = ic_cdk::call(canister_id, "get_profile_by_principal", (voter,)).await;
+    let response: Result<(Option<UserProfile>,), _> = ic_cdk::call(
+        canister_id,
+        "get_profile_by_principal",
+        (voter,)
+    ).await;
 
     let profile = match response {
         Ok((Some(p),)) => p,
-        Ok((None,)) => return Err("Voter does not have a profile.".to_string()),
-        Err((code, msg)) => return Err(format!("Failed to get profile ({:?}): {}", code, msg)),
+        Ok((None,)) => {
+            return Err("Voter does not have a profile.".to_string());
+        }
+        Err((code, msg)) => {
+            return Err(format!("Failed to get profile ({:?}): {}", code, msg));
+        }
     };
-    
+
     let now = time();
     let min_tenure = MIN_ACCOUNT_TENURE_NS.with(|t| *t.borrow());
     let max_inactivity = MAX_ACCOUNT_INACTIVITY_NS.with(|i| *i.borrow());
@@ -307,7 +368,6 @@ async fn check_voter_eligibility(voter: Principal) -> Result<(), String> {
 
     Ok(())
 }
-
 
 // Export the interface for the smart contract.
 ic_cdk::export_candid!();

@@ -1,4 +1,4 @@
-use candid::{CandidType, Deserialize, Principal};
+use candid::{ CandidType, Deserialize, Principal };
 use ic_cdk::api::caller;
 use ic_cdk_macros::*;
 use std::cell::RefCell;
@@ -35,8 +35,20 @@ struct StableState {
 #[pre_upgrade]
 fn pre_upgrade() {
     let state = StableState {
-        invite_codes: INVITE_CODES.with(|codes| codes.borrow().iter().map(|(k, v)| (k.clone(), *v)).collect()),
-        authorized_sectors: AUTHORIZED_SECTORS.with(|sectors| sectors.borrow().iter().map(|(k, v)| (*k, *v)).collect()),
+        invite_codes: INVITE_CODES.with(|codes|
+            codes
+                .borrow()
+                .iter()
+                .map(|(k, v)| (k.clone(), *v))
+                .collect()
+        ),
+        authorized_sectors: AUTHORIZED_SECTORS.with(|sectors|
+            sectors
+                .borrow()
+                .iter()
+                .map(|(k, v)| (*k, *v))
+                .collect()
+        ),
         owner: OWNER.with(|o| *o.borrow()),
         factory_canister_id: FACTORY_CANISTER_ID.with(|id| *id.borrow()),
     };
@@ -46,10 +58,18 @@ fn pre_upgrade() {
 #[post_upgrade]
 fn post_upgrade() {
     let (state,): (StableState,) = ic_cdk::storage::stable_restore().unwrap();
-    INVITE_CODES.with(|codes| *codes.borrow_mut() = state.invite_codes.into_iter().collect());
-    AUTHORIZED_SECTORS.with(|sectors| *sectors.borrow_mut() = state.authorized_sectors.into_iter().collect());
-    OWNER.with(|o| *o.borrow_mut() = state.owner);
-    FACTORY_CANISTER_ID.with(|id| *id.borrow_mut() = state.factory_canister_id);
+    INVITE_CODES.with(|codes| {
+        *codes.borrow_mut() = state.invite_codes.into_iter().collect();
+    });
+    AUTHORIZED_SECTORS.with(|sectors| {
+        *sectors.borrow_mut() = state.authorized_sectors.into_iter().collect();
+    });
+    OWNER.with(|o| {
+        *o.borrow_mut() = state.owner;
+    });
+    FACTORY_CANISTER_ID.with(|id| {
+        *id.borrow_mut() = state.factory_canister_id;
+    });
 }
 
 // ==================================================================================================
@@ -58,8 +78,12 @@ fn post_upgrade() {
 
 #[init]
 fn init(initial_owner: Principal, initial_factory: Principal) {
-    OWNER.with(|o| *o.borrow_mut() = initial_owner);
-    FACTORY_CANISTER_ID.with(|id| *id.borrow_mut() = initial_factory);
+    OWNER.with(|o| {
+        *o.borrow_mut() = initial_owner;
+    });
+    FACTORY_CANISTER_ID.with(|id| {
+        *id.borrow_mut() = initial_factory;
+    });
 }
 
 // Private helper for authorization
@@ -72,7 +96,9 @@ fn set_factory_canister(id: Principal) -> Result<(), String> {
     if !is_owner(caller()) {
         return Err("Unauthorized".to_string());
     }
-    FACTORY_CANISTER_ID.with(|f_id| *f_id.borrow_mut() = id);
+    FACTORY_CANISTER_ID.with(|f_id| {
+        *f_id.borrow_mut() = id;
+    });
     Ok(())
 }
 
@@ -131,7 +157,6 @@ fn revoke_code(code: String) -> Result<(), String> {
 fn resolve_code(code: String) -> Option<Principal> {
     INVITE_CODES.with(|c| c.borrow().get(&code).cloned())
 }
-
 
 // Export the interface for the smart contract.
 ic_cdk::export_candid!();

@@ -5,7 +5,8 @@ const useUiStore = create((set) => ({
 
   // Manages the slide-out menu on mobile viewports
   isMobileNavOpen: false,
-
+  //Control modals
+  isCreateJoinModalOpen: false, 
   // Determines the primary context: 'global' or a sector's Principal ID as a string.
   // This controls what Pane2 will display.
   activeNavigator: 'global',
@@ -23,6 +24,11 @@ const useUiStore = create((set) => ({
   // Closes the mobile navigation, useful after a selection is made
   closeMobileNav: () => set({ isMobileNavOpen: false }),
 
+
+  openCreateJoinModal: () => set({ isCreateJoinModalOpen: true }),
+  closeCreateJoinModal: () => set({ isCreateJoinModalOpen: false }),
+
+  
   // Sets the primary navigator, resetting the secondary context to its default
   setNavigator: (navigatorId) => set({
     activeNavigator: navigatorId,

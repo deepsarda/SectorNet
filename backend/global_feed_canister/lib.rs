@@ -1,4 +1,4 @@
-use candid::{CandidType, Deserialize, Principal};
+use candid::{ CandidType, Deserialize, Principal };
 use ic_cdk::api::time;
 use ic_cdk_macros::*;
 use std::cell::RefCell;
@@ -64,11 +64,35 @@ thread_local! {
 
 #[pre_upgrade]
 fn pre_upgrade() {
-    let posts_entries: Vec<(u64, GlobalPost)> = POSTS.with(|p| p.borrow().iter().map(|(k, v)| (*k, v.clone())).collect());
-    let vetted_sectors_entries: Vec<(Principal, ())> = VETTED_SECTORS.with(|s| s.borrow().iter().map(|(k, v)| (*k, *v)).collect());
-    let global_posters_entries: Vec<(Principal, ())> = GLOBAL_POSTERS.with(|p| p.borrow().iter().map(|(k, v)| (*k, *v)).collect());
-    let admins_entries: Vec<(Principal, ())> = ADMINS.with(|a| a.borrow().iter().map(|(k, v)| (*k, *v)).collect());
-    
+    let posts_entries: Vec<(u64, GlobalPost)> = POSTS.with(|p|
+        p
+            .borrow()
+            .iter()
+            .map(|(k, v)| (*k, v.clone()))
+            .collect()
+    );
+    let vetted_sectors_entries: Vec<(Principal, ())> = VETTED_SECTORS.with(|s|
+        s
+            .borrow()
+            .iter()
+            .map(|(k, v)| (*k, *v))
+            .collect()
+    );
+    let global_posters_entries: Vec<(Principal, ())> = GLOBAL_POSTERS.with(|p|
+        p
+            .borrow()
+            .iter()
+            .map(|(k, v)| (*k, *v))
+            .collect()
+    );
+    let admins_entries: Vec<(Principal, ())> = ADMINS.with(|a|
+        a
+            .borrow()
+            .iter()
+            .map(|(k, v)| (*k, *v))
+            .collect()
+    );
+
     let state = (
         posts_entries,
         NEXT_POST_ID.with(|id| *id.borrow()),
@@ -78,7 +102,7 @@ fn pre_upgrade() {
         OWNER.with(|o| *o.borrow()),
         GOVERNANCE_CANISTER_ID.with(|id| *id.borrow()),
     );
-    
+
     ic_cdk::storage::stable_save((state,)).unwrap();
 }
 
@@ -92,23 +116,46 @@ fn post_upgrade() {
         admins_entries,
         owner,
         governance_canister_id,
-    ): (Vec<(u64, GlobalPost)>, u64, Vec<(Principal, ())>, Vec<(Principal, ())>, Vec<(Principal, ())>, Principal, Option<Principal>) = ic_cdk::storage::stable_restore().unwrap();
+    ): (
+        Vec<(u64, GlobalPost)>,
+        u64,
+        Vec<(Principal, ())>,
+        Vec<(Principal, ())>,
+        Vec<(Principal, ())>,
+        Principal,
+        Option<Principal>,
+    ) = ic_cdk::storage::stable_restore().unwrap();
 
-    POSTS.with(|p| *p.borrow_mut() = posts_entries.into_iter().collect());
-    NEXT_POST_ID.with(|id| *id.borrow_mut() = next_post_id);
-    VETTED_SECTORS.with(|s| *s.borrow_mut() = vetted_sectors_entries.into_iter().collect());
-    GLOBAL_POSTERS.with(|p| *p.borrow_mut() = global_posters_entries.into_iter().collect());
-    ADMINS.with(|a| *a.borrow_mut() = admins_entries.into_iter().collect());
-    OWNER.with(|o| *o.borrow_mut() = owner);
-    GOVERNANCE_CANISTER_ID.with(|id| *id.borrow_mut() = governance_canister_id);
+    POSTS.with(|p| {
+        *p.borrow_mut() = posts_entries.into_iter().collect();
+    });
+    NEXT_POST_ID.with(|id| {
+        *id.borrow_mut() = next_post_id;
+    });
+    VETTED_SECTORS.with(|s| {
+        *s.borrow_mut() = vetted_sectors_entries.into_iter().collect();
+    });
+    GLOBAL_POSTERS.with(|p| {
+        *p.borrow_mut() = global_posters_entries.into_iter().collect();
+    });
+    ADMINS.with(|a| {
+        *a.borrow_mut() = admins_entries.into_iter().collect();
+    });
+    OWNER.with(|o| {
+        *o.borrow_mut() = owner;
+    });
+    GOVERNANCE_CANISTER_ID.with(|id| {
+        *id.borrow_mut() = governance_canister_id;
+    });
 }
-
 
 // === Initialization & Setup (Owner Only) ===
 
 #[init]
 fn init(initial_owner: Principal) {
-    OWNER.with(|o| *o.borrow_mut() = initial_owner);
+    OWNER.with(|o| {
+        *o.borrow_mut() = initial_owner;
+    });
     ADMINS.with(|a| a.borrow_mut().insert(initial_owner, ()));
 
     // Create default welcome post
@@ -131,8 +178,9 @@ Enjoy your journey!"#.to_string(),
         p.borrow_mut().insert(0, default_post);
     });
 
-    NEXT_POST_ID.with(|id| *id.borrow_mut() = 1); // Ensure the next post ID is correct
-
+    NEXT_POST_ID.with(|id| {
+        *id.borrow_mut() = 1;
+    }); // Ensure the next post ID is correct
 }
 
 // Helper to check if a principal is an admin.
@@ -146,10 +194,11 @@ fn set_governance_canister(id: Principal) -> Result<(), String> {
     if caller != OWNER.with(|o| *o.borrow()) {
         return Err("Unauthorized: Only owner can set governance ID.".to_string());
     }
-    GOVERNANCE_CANISTER_ID.with(|gov_id| *gov_id.borrow_mut() = Some(id));
+    GOVERNANCE_CANISTER_ID.with(|gov_id| {
+        *gov_id.borrow_mut() = Some(id);
+    });
     Ok(())
 }
-
 
 // === Public Update Calls (Content Submission) ===
 
@@ -183,7 +232,11 @@ fn submit_post_from_sector(post_data: SectorPostSubmission) -> Result<u64, Strin
 }
 
 #[update]
-fn submit_direct_post(post_data: DirectPostSubmission, author_username: String, author_tag: UserTag) -> Result<u64, String> {
+fn submit_direct_post(
+    post_data: DirectPostSubmission,
+    author_username: String,
+    author_tag: UserTag
+) -> Result<u64, String> {
     let caller = ic_cdk::api::msg_caller();
     let is_admin = is_admin(&caller);
     let is_global_poster = GLOBAL_POSTERS.with(|gp| gp.borrow().contains_key(&caller));
@@ -221,7 +274,7 @@ fn set_sector_vetted_status(sector_id: Principal, new_status: bool) -> Result<()
     let caller = ic_cdk::api::msg_caller();
     let owner = OWNER.with(|o| *o.borrow());
     let governance_id = GOVERNANCE_CANISTER_ID.with(|id| *id.borrow());
-    
+
     // Default governance to a dummy principal if not set
     let governance_id = governance_id.unwrap_or_else(|| Principal::from_text("2vxsx-fae").unwrap());
 
@@ -271,7 +324,7 @@ fn get_global_feed(page: u64, size: u64) -> Vec<GlobalPost> {
         if start_index >= posts.len() {
             return vec![];
         }
-        let end_index = (start_index + size as usize).min(posts.len());
+        let end_index = (start_index + (size as usize)).min(posts.len());
 
         posts[start_index..end_index].to_vec()
     })
@@ -281,7 +334,6 @@ fn get_global_feed(page: u64, size: u64) -> Vec<GlobalPost> {
 fn get_vetted_sectors() -> Vec<Principal> {
     VETTED_SECTORS.with(|s| s.borrow().keys().cloned().collect())
 }
-
 
 // Export the interface for the smart contract.
 ic_cdk::export_candid!();

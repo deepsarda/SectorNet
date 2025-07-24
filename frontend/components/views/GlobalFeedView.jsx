@@ -4,11 +4,10 @@ import Markdown from 'react-markdown'
 
 const PostItem = ({ post }) => {
   const date = new Date(Number(post.timestamp / 1_000_000n));
-  console.log(post)
   return (
     <div className="border border-slate-700 p-4 bg-slate-900/20 rounded-md">
       <p className="text-sm text-fuchsia-400">
-        {`<${post.author_username}> []from [${post.origin_sector_id[0]?.toText().substring(0, 5) ?? 'Direct'}]`}
+        {`<${post.author_username}> [${Object.keys(post.author_user_tag[0])[0]} ${post.author_sector_role ? " | " + Object.keys(post.author_sector_role[0])[0] : ''}] from [${post.origin_sector_id[0]?.toText().substring(0, 5) ?? 'Direct'}]`}
       </p>
       <div className="divider before:bg-slate-700 after:bg-slate-700 my-2"></div>
       <div className="text-slate-200 prose prose-sm prose-invert max-w-none">

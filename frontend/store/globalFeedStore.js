@@ -61,6 +61,32 @@ const useGlobalFeedStore = create((set, get) => ({
       set({ isLoadingMore: false });
     }
   },
+  setVettedStatus: async (sectorId, newStatus) => {
+    const { identity } = useAuthStore.getState();
+    if (!identity) return { Err: "Admin identity not found." };
+    
+    set({ isLoading: true, error: null });
+    try {
+      const actor = createActor('global_feed_canister', { agentOptions: { identity }});
+      const result = await actor.set_sector_vetted_status(sectorId, newStatus);
+
+      if('Err' in result) {
+        throw new Error(result.Err);
+      }
+      
+      // On success, update the registry store's cache to reflect the change instantly.
+      useSectorRegistryStore.getState().updateVettedStatusInCache(sectorId, newStatus);
+
+      set({ isLoading: false });
+      return { Ok: null };
+    } catch (err) {
+      console.error("Error setting vetted status:", err);
+      const errorMessage = err.message || "Failed to set vetted status.";
+      set({ error: errorMessage, isLoading: false });
+      return { Err: errorMessage };
+    }
+  },
 }));
+
 
 export default useGlobalFeedStore;

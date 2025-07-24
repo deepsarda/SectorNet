@@ -3,7 +3,7 @@ import useUiStore from '../../store/uiStore';
 import useSectorStore from '../../store/sectorStore';
 
 const Pane1_Navigator = () => {
-  const { activeNavigator, setNavigator } = useUiStore();
+  const { activeNavigator, setNavigator, openCreateJoinModal } = useUiStore();
   const { joinedSectors, isListLoading, fetchJoinedSectors } = useSectorStore();
 
   useEffect(() => {
@@ -26,7 +26,7 @@ const Pane1_Navigator = () => {
         </div>
       </div>
       <div className="tooltip tooltip-right" data-tip="Create/Join Sector">
-        <div className="w-12 h-12 border-2 border-dashed border-slate-500 flex items-center justify-center font-bold text-lg mt-auto cursor-pointer hover:bg-slate-700 transition-colors">
+        <div className="w-12 h-12 border-2 border-dashed border-slate-500 flex items-center justify-center font-bold text-lg mt-auto cursor-pointer hover:bg-slate-700 transition-colors" onClick={openCreateJoinModal}>
             [+]
         </div>
       </div>

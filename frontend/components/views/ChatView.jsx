@@ -4,42 +4,62 @@ import useSectorStore from '../../store/sectorStore';
 import useAuthStore from '../../store/authStore';
 import getUserProfile from '../../services/userCache';
 import cryptoService from '../../services/cryptoService';
-import { ShieldCheckIcon, ShieldExclamationIcon, KeyIcon } from '@heroicons/react/24/solid';
+import { ShieldCheckIcon, ShieldExclamationIcon } from '@heroicons/react/24/solid';
 import KeyRotationManager from './KeyRotationManager'; 
 import Markdown from 'react-markdown';
-const MessageItem = ({ message, isMe, securityModel, sectorId }) => {
-  const [username, setUsername] = useState(() => isMe ? 'You' : '...');
-  const [decryptedContent, setDecryptedContent] = useState('[Decrypting...]');
+import getSectorRole from '../../services/roleCache';
+
+const MessageLine = ({ message, securityModel, sectorId }) => {
+  const [authorProfile, setAuthorProfile] = useState(null);
+  const [authorSectorRole, setAuthorSectorRole] = useState(null); 
+  const [decryptedContent, setDecryptedContent] = useState('...');
+  const { principal } = useAuthStore();
+  const { activeSectorData } = useSectorStore();
+
+  const isMe = message.author_principal.equals(principal);
 
   useEffect(() => {
-    if (!isMe) {
-      getUserProfile(message.author_principal).then(p => p && setUsername(p.username));
-    }
-    
-    // The Decryption Logic
+    getUserProfile(message.author_principal).then(setAuthorProfile);
+    getSectorRole(sectorId, message.author_principal).then(setAuthorSectorRole);
+
     const decrypt = async () => {
+      // The `encrypted_content_markdown` is a Vec<u8> (Uint8Array) from the canister
+      const encryptedBuffer = new Uint8Array(message.encrypted_content_markdown).buffer;
+
       if (securityModel === 'HighSecurityE2EE') {
         const key = cryptoService.getSectorKey(sectorId.toText(), Number(message.key_epoch_id));
         if (!key) {
           setDecryptedContent('[Error: No key for this message epoch]');
           return;
         }
-        const plaintext = await cryptoService.decryptMessage(message.encrypted_content_markdown, key);
+        const plaintext = await cryptoService.decryptMessage(encryptedBuffer, key);
         setDecryptedContent(plaintext || '[Decryption Failed]');
       } else {
-        // Standard model is just plain text
-        setDecryptedContent(new TextDecoder().decode(message.encrypted_content_markdown));
+        // Standard model is just plain text, but still needs decoding from a Uint8Array
+        setDecryptedContent(new TextDecoder().decode(encryptedBuffer));
       }
     };
     decrypt();
-  }, [message, isMe, securityModel, sectorId]);
+  }, [message, securityModel, sectorId]);
 
-  const date = new Date(Number(message.timestamp / 1_000_000n));
+  const timestamp = new Date(Number(message.timestamp / 1_000_000n)).toLocaleTimeString();
+  const username = authorProfile?.username || message.author_principal.toText().substring(0, 8);
+  
+  // Get User Tag (Global Role)
+  const userTag = authorProfile?.tags?.[0] ? Object.keys(authorProfile.tags[0])[0] : 'User';
 
+  const sectorRole = authorSectorRole ? ` | ${Object.keys(authorSectorRole)[0]}` : '';
+  const roleString = `[${userTag}${sectorRole}]`;
   return (
-    <div className={`chat ${isMe ? 'chat-end' : 'chat-start'}`}>
-      <div className="chat-header text-xs text-slate-500 mb-1">{username}<time className="ml-2">{date.toLocaleTimeString()}</time></div>
-      <div className={`chat-bubble ${isMe ? 'chat-bubble-primary bg-glassterm-accent text-black' : 'bg-slate-700'}`}><Markdown>{decryptedContent}</Markdown></div>
+    <div className="text-sm">
+      <div className="text-slate-500">
+        <span className="text-slate-600 mr-2">[{timestamp}]</span>
+        <span className="font-bold text-fuchsia-400">{`<${username}>`}</span>
+        <span className="ml-2 text-cyan-400">{roleString}</span>
+      </div>
+      <div className="text-slate-200 pl-4 prose prose-sm prose-invert max-w-none">
+        <Markdown>{decryptedContent}</Markdown>
+      </div>
     </div>
   );
 };
@@ -52,9 +72,12 @@ const ChatView = ({ channelName }) => {
 
   const chatContainerRef = useRef(null);
   const loaderRef = useRef(null);
+  
+  const isModerator = activeSectorData && 'Moderator' in activeSectorData.my_role;
 
   useEffect(() => {
     if (activeSectorData?.id && channelName) {
+      // Assuming activeSectorData.id is a Principal
       chatState.setActiveChannel(activeSectorData.id, channelName);
     }
     return () => {
@@ -73,36 +96,28 @@ const ChatView = ({ channelName }) => {
   }, [chatState.messages.length]);
 
   const handleFetchOlder = useCallback(() => {
-    const chatNode = chatContainerRef.current;
-    if (!chatNode) return;
-    const oldScrollHeight = chatNode.scrollHeight;
-    const oldScrollTop = chatNode.scrollTop;
-    
-    chatState.fetchOlderMessages().then(() => {
-      if (chatNode) {
-        const newScrollHeight = chatNode.scrollHeight;
-        chatNode.scrollTop = newScrollHeight - oldScrollHeight + oldScrollTop;
-      }
-    });
+    chatState.fetchOlderMessages();
   }, [chatState.fetchOlderMessages]);
+
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && chatState.hasOlderMessages) {
+        if (entries[0].isIntersecting && chatState.hasOlderMessages && !chatState.isLoadingOlder) {
           handleFetchOlder();
         }
       },
-      { root: chatContainerRef.current, threshold: 1.0 }
+      { root: chatContainerRef.current, threshold: 0.1 }
     );
 
     const loaderNode = loaderRef.current;
     if (loaderNode) observer.observe(loaderNode);
     return () => { if (loaderNode) observer.unobserve(loaderNode); };
-  }, [handleFetchOlder, chatState.hasOlderMessages]);
+  }, [handleFetchOlder, chatState.hasOlderMessages, chatState.isLoadingOlder]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
+    if (!messageInput.trim()) return;
     chatState.sendMessage(messageInput);
     setMessageInput('');
   };
@@ -120,9 +135,8 @@ const ChatView = ({ channelName }) => {
             <ShieldExclamationIcon className="w-5 h-5 ml-2 text-yellow-400" title="Standard Access Control (Not E2EE)"/>
           )}
         </h2>
-        {/* Show the rekey manager only if a rekey is required */}
-        {activeSectorData.rekey_required && (
-          <KeyRotationManager isModerator = {isModerator} />
+        {activeSectorData && activeSectorData.rekey_required && (
+          <KeyRotationManager isModerator={isModerator} />
         )}
       </div>
 
@@ -132,17 +146,18 @@ const ChatView = ({ channelName }) => {
         ) : (
             <>
                 <div ref={loaderRef} className="text-center py-2">
-                    {chatState.isLoadingOlder ? (
+                    {chatState.isLoadingOlder && (
                         <span className="loading loading-spinner loading-sm"></span>
-                    ) : !chatState.hasOlderMessages ? (
-                        <p className="text-xs text-slate-500">You've reached the beginning of the channel history.</p>
-                    ) : (
-                        <p className="text-xs text-slate-600">Scroll up to load older messages.</p>
                     )}
                 </div>
-                <div className="flex flex-col space-y-4">
+                <div className="flex flex-col space-y-2">
                   {chatState.messages.map(msg => (
-                    <MessageItem key={String(msg.id)} message={msg} isMe={msg.author_principal.equals(principal)} />
+                    <MessageLine 
+                      key={String(msg.id)} 
+                      message={msg} 
+                      securityModel={securityModel}
+                      sectorId={activeSectorData.id}
+                    />
                   ))}
                 </div>
             </>
@@ -157,11 +172,16 @@ const ChatView = ({ channelName }) => {
             className="input input-bordered join-item w-full bg-slate-800"
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
+            disabled={activeSectorData?.rekey_required}
           />
-          <button type="submit" className="btn join-item bg-glassterm-accent text-black" disabled={chatState.isSending}>
+          <button 
+            type="submit" 
+            className="btn join-item bg-glassterm-accent text-black" 
+            disabled={chatState.isSending || activeSectorData?.rekey_required}>
             {chatState.isSending ? <span className="loading loading-spinner loading-xs"></span> : "Send"}
           </button>
         </form>
+         {activeSectorData?.rekey_required && <p className="text-xs text-red-400 mt-1">Messaging disabled until sector key is rotated.</p>}
       </div>
     </div>
   );
