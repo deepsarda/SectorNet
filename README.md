@@ -33,13 +33,13 @@ The project's vision is to create a ecosystem of interconnected, self-governed c
 
 *   **Backend:** Rust
 *   **Blockchain:** The Internet Computer Protocol
-*   **Frontend:** React (Vite), TypeScript, Tailwind CSS
+*   **Frontend:** React (Vite), TypeScript, Tailwind CSS, Daisy UI
 *   **State Management:** Zustand
 *   **IC Communication:** `@dfinity/agent-js`
 
 ## **4. Getting Started**
 
-See Build.md
+See `Build.md`
 
 ## **5. Roadmap & Upcoming Features**
 
