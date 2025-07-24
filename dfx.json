@@ -1,0 +1,127 @@
+{
+  "canisters": {
+    "user_canister": {
+      "type": "custom",
+      "candid": "backend/user_canister/user_canister.did",
+      "wasm": "target/wasm32-unknown-unknown/release/user_canister.wasm",
+      "build": [
+        "cargo build --target wasm32-unknown-unknown --release -p user_canister",
+        "candid-extractor target/wasm32-unknown-unknown/release/user_canister.wasm > backend/user_canister/user_canister.did"
+      ],
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
+    },
+    "sector_factory_canister": {
+      "type": "custom",
+      "candid": "backend/sector_factory_canister/sector_factory_canister.did",
+      "wasm": "target/wasm32-unknown-unknown/release/sector_factory_canister.wasm",
+      "build": [
+        "cargo build --target wasm32-unknown-unknown --release -p sector_factory_canister",
+        "candid-extractor target/wasm32-unknown-unknown/release/sector_factory_canister.wasm > backend/sector_factory_canister/sector_factory_canister.did"
+      ],
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
+    },
+    "sector_registry_canister": {
+      "type": "custom",
+      "candid": "backend/sector_registry_canister/sector_registry_canister.did",
+      "wasm": "target/wasm32-unknown-unknown/release/sector_registry_canister.wasm",
+      "build": [
+        "cargo build --target wasm32-unknown-unknown --release -p sector_registry_canister",
+        "candid-extractor target/wasm32-unknown-unknown/release/sector_registry_canister.wasm > backend/sector_registry_canister/sector_registry_canister.did"
+      ],
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
+    },
+    "invite_canister": {
+      "type": "custom",
+      "candid": "backend/invite_canister/invite_canister.did",
+      "wasm": "target/wasm32-unknown-unknown/release/invite_canister.wasm",
+      "build": [
+        "cargo build --target wasm32-unknown-unknown --release -p invite_canister",
+        "candid-extractor target/wasm32-unknown-unknown/release/invite_canister.wasm > backend/invite_canister/invite_canister.did"
+      ],
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
+    },
+    "sector_canister": {
+      "type": "custom",
+      "candid": "backend/sector_canister/sector_canister.did",
+      "wasm": "target/wasm32-unknown-unknown/release/sector_canister.wasm",
+      "build": [
+        "cargo build --target wasm32-unknown-unknown --release -p sector_canister",
+        "candid-extractor target/wasm32-unknown-unknown/release/sector_canister.wasm > backend/sector_canister/sector_canister.did"
+      ],
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
+    },
+    "global_feed_canister": {
+      "type": "custom",
+      "candid": "backend/global_feed_canister/global_feed_canister.did",
+      "wasm": "target/wasm32-unknown-unknown/release/global_feed_canister.wasm",
+      "build": [
+        "cargo build --target wasm32-unknown-unknown --release -p global_feed_canister",
+        "candid-extractor target/wasm32-unknown-unknown/release/global_feed_canister.wasm > backend/global_feed_canister/global_feed_canister.did"
+      ],
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
+    },
+    "governance_canister": {
+      "type": "custom",
+      "candid": "backend/governance_canister/governance_canister.did",
+      "wasm": "target/wasm32-unknown-unknown/release/governance_canister.wasm",
+      "build": [
+        "cargo build --target wasm32-unknown-unknown --release -p governance_canister",
+        "candid-extractor target/wasm32-unknown-unknown/release/governance_canister.wasm > backend/governance_canister/governance_canister.did"
+      ],
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
+    },
+    "frontend": {
+      "dependencies": [
+        "user_canister",
+        "sector_factory_canister",
+        "sector_registry_canister",
+        "invite_canister",
+        "sector_canister",
+        "global_feed_canister",
+        "governance_canister"
+      ],
+      "frontend": {
+        "entrypoint": "frontend/index.html"
+      },
+      "source": [
+        "frontend/dist"
+      ],
+      "type": "assets"
+    }
+  },
+  "output_env_file": ".env",
+  "defaults": {
+    "build": {
+      "packtool": "",
+      "args": ""
+    }
+  }
+}

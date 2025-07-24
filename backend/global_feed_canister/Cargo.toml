@@ -1,0 +1,20 @@
+[package]
+name = "global_feed_canister"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+path = "lib.rs"
+
+[dependencies]
+candid = "0.10.13"
+ic-cdk = "0.18.5"
+ic-cdk-macros = "0.18.5"
+ic-stable-structures = "0.7.0"
+serde = { version = "1.0", features = ["derive"] }
+
+[profile.release]
+lto = true
+opt-level = 'z' # Optimize for size
+strip = true
