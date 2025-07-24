@@ -9,7 +9,7 @@ import ComingSoon from '../common/ComingSoon';
 
 
 const WelcomeGuideView = () => ( 
-  <div className="p-4">
+  <div className="prose prose-invert p-4">
    <WelcomeGuide />
   </div>
 );

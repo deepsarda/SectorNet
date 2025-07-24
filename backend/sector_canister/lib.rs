@@ -1,10 +1,10 @@
+#![allow(warnings)]
+
 use candid::{ CandidType, Deserialize, Principal };
-use ic_cdk::{ api::{ canister_self, msg_caller, time }, call, management_canister::raw_rand };
+use ic_cdk::{ api::{ caller, management_canister::main::raw_rand, time }, call };
 use ic_cdk_macros::*;
 use std::cell::RefCell;
 use std::collections::{ HashMap, HashSet };
-use uuid::Uuid;
-use hex;
 
 // ==================================================================================================
 // === Types & State ===
@@ -61,7 +61,7 @@ pub struct CryptoState {
 
 #[derive(CandidType, Deserialize, Clone)]
 pub struct Post {
-    id: String, // Using UUID
+    id: String, // Using raw_rand hex string
     author_principal: Principal,
     encrypted_content_markdown: Vec<u8>,
     timestamp: u64,
@@ -71,7 +71,7 @@ pub struct Post {
 
 #[derive(CandidType, Deserialize, Clone)]
 pub struct Message {
-    id: String, // Using UUID
+    id: String, // Using raw_rand hex string
     key_epoch_id: u32,
     author_principal: Principal,
     timestamp: u64,
@@ -88,7 +88,7 @@ struct Member {
 #[derive(CandidType, Deserialize, Clone)]
 struct Channel {
     name: String,
-    messages: HashMap<String, Message>, // Keyed by Message ID (UUID)
+    messages: HashMap<String, Message>, // Keyed by Message ID
 }
 
 // Custom Error Type
@@ -113,7 +113,7 @@ pub struct SectorConfigUpdate {
 
 // State Definition
 type MemberStore = HashMap<Principal, Member>;
-type PostStore = HashMap<String, Post>; // Keyed by Post ID (UUID)
+type PostStore = HashMap<String, Post>; // Keyed by Post ID
 type ChannelStore = HashMap<String, Channel>; // Keyed by channel name
 
 const HIGH_SECURITY_MEMBER_LIMIT: usize = 50;
@@ -145,6 +145,15 @@ struct StableState {
     invite_canister_id: Option<Principal>,
     global_feed_canister_id: Option<Principal>,
     user_canister_id: Option<Principal>,
+}
+
+// ==================================================================================================
+// === Helper Functions ===
+// ==================================================================================================
+
+/// Encodes a byte slice into a lowercase hexadecimal string.
+fn bytes_to_hex_string(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{:02x}", b)).collect()
 }
 
 // ==================================================================================================
@@ -238,7 +247,7 @@ fn init(
 // ==================================================================================================
 
 fn get_caller_role() -> Result<SectorRole, Error> {
-    let caller = msg_caller();
+    let caller = caller();
     MEMBERS.with(|m| {
         m.borrow()
             .get(&caller)
@@ -384,7 +393,7 @@ fn get_member_role(principal: Principal) -> Option<SectorRole> {
 
 #[update]
 fn join() -> Result<(), Error> {
-    let caller = msg_caller();
+    let caller = caller();
     let config = CONFIG.with(|c|
         c
             .borrow()
@@ -436,9 +445,9 @@ async fn create_invite_code() -> Result<String, Error> {
         Error::CallFailed(format!("Failed to get randomness: {:?}", e))
     )?;
 
-    let rand_bytes = result;
+    let rand_bytes = result.0;
 
-    let code = hex::encode(&rand_bytes[0..8]);
+    let code = bytes_to_hex_string(&rand_bytes[0..8]);
 
     // Await the call and handle both transport and application errors
     let call_result: Result<(Result<(), String>,), _> = call(invite_canister, "register_code", (
@@ -459,7 +468,7 @@ async fn create_invite_code() -> Result<String, Error> {
 
 #[update]
 fn leave() -> Result<(), Error> {
-    let caller = msg_caller();
+    let caller = caller();
     get_caller_role()?;
 
     MEMBERS.with(|m| m.borrow_mut().remove(&caller));
@@ -477,7 +486,7 @@ fn leave() -> Result<(), Error> {
 #[update]
 fn set_sector_role(target_user: Principal, new_role: SectorRole) -> Result<(), Error> {
     is_moderator()?;
-    let caller = msg_caller();
+    let caller = caller();
     let config = CONFIG.with(|c|
         c
             .borrow()
@@ -510,16 +519,20 @@ fn set_sector_role(target_user: Principal, new_role: SectorRole) -> Result<(), E
 // ==================================================================================================
 
 #[update]
-fn create_post(
+async fn create_post(
     encrypted_content_markdown: Vec<u8>,
     for_global_feed: bool
 ) -> Result<String, Error> {
     is_poster()?;
 
-    let id = Uuid::new_v4().to_string();
+    let rand_bytes = raw_rand().await.map_err(|e|
+        Error::CallFailed(format!("Failed to get randomness for post ID: {:?}", e))
+    )?.0;
+    let id = bytes_to_hex_string(&rand_bytes);
+
     let post = Post {
         id: id.clone(),
-        author_principal: msg_caller(),
+        author_principal: caller(),
         encrypted_content_markdown,
         timestamp: time(),
         status: if for_global_feed {
@@ -553,7 +566,7 @@ async fn approve_global_post(
     decrypted_content_markdown: String
 ) -> Result<(), Error> {
     is_moderator()?;
-    let this_canister = canister_self();
+    let this_canister = ic_cdk::id();
 
     let config = CONFIG.with(|c| c.borrow().clone()).ok_or_else(||
         Error::ConfigError("Sector not initialized.".to_string())
@@ -631,12 +644,17 @@ async fn approve_global_post(
 }
 
 #[update]
-fn send_message(
+async fn send_message(
     channel_name: String,
     encrypted_content: Vec<u8>,
     key_epoch: u32
 ) -> Result<String, Error> {
     get_caller_role()?;
+
+    let rand_bytes = raw_rand().await.map_err(|e|
+        Error::CallFailed(format!("Failed to get randomness for message ID: {:?}", e))
+    )?.0;
+    let id = bytes_to_hex_string(&rand_bytes);
 
     CHANNELS.with(|c| {
         let mut channels = c.borrow_mut();
@@ -644,11 +662,10 @@ fn send_message(
             .get_mut(&channel_name)
             .ok_or_else(|| Error::NotFound("Channel not found.".to_string()))?;
 
-        let id = Uuid::new_v4().to_string();
         let message = Message {
             id: id.clone(),
             key_epoch_id: key_epoch,
-            author_principal: msg_caller(),
+            author_principal: caller(),
             timestamp: time(),
             encrypted_content_markdown: encrypted_content,
         };

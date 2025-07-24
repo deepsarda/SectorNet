@@ -7,6 +7,8 @@
 *   [DFINITY Canister SDK](https://internetcomputer.org/docs/current/developer-docs/setup/install) (dfx)
 *   [Rust](https://www.rust-lang.org/) and the `wasm32-unknown-unknown` target.
 
+
+**NOTES** Tested on dfx version 0.26.1. Use `dfxvm install 0.26.1` to install it. 
 ## Installation
 
 1.  **Clone the repository:**
@@ -36,6 +38,8 @@ The deployment must be done in stages: deploy foundational canisters, then deplo
 We can perform this process using two methods: the recommended automated script or by running the commands manually.
  
 Note: The whole process does the build step multiple times and that is the expected behaviour and I do not have the time to fix it.
+
+
 ---
 
 ### Option 1: Automated Deployment (Recommended)
@@ -45,7 +49,7 @@ For convenience, an automated script `deploy.sh` is included in the project root
 1.  **Start the local replica:**
     Ensure you start with a clean state to avoid issues.
     ```bash
-    dfx start --background --clean
+    dfx start --background --clean --replica
     ```
 
 2.  **Make the script executable (only needs to be done once):**
@@ -68,12 +72,12 @@ This method is useful for understanding the inner workings of the deployment pro
 
 1.  **Start the local replica and build the project:**
     ```bash
-    dfx start --background --clean
+    dfx start --background --clean --replica
     cargo build --target wasm32-unknown-unknown --release
     ```
 
 2.  **Get your Principal ID:**
-    This will be set as the owner of the canisters.
+    This will be set as the owner of the canisters. We use a preset one, for easy developement.
     ```bash
     export MY_PRINCIPAL=$(dfx identity get-principal)
     echo "Your Principal is: $MY_PRINCIPAL"
@@ -114,6 +118,8 @@ This method is useful for understanding the inner workings of the deployment pro
     dfx canister call global_feed_canister set_governance_canister "(principal \"$GOVERNANCE_ID\")"
     ```
 
+WARNING: We recommend that you add additional cycles to register using the command `dfx ledger fabricate-cycles --t 100 --canister $REGISTRY_ID`
+
 6.  **Deploy the Frontend:**
     ```bash
     dfx deploy frontend
@@ -137,4 +143,11 @@ If using the automated script, you would need to modify it to include the `--net
 
 ```bash
 dfx deploy user_canister --network ic --argument "(principal \"$MY_PRINCIPAL\")"
+```
+
+Also lets add the developement user as a global poster.
+
+```bash
+
+dfx canister call global_feed_canister add_global_poster "(principal \"pgwnk-mbfq6-gge4j-qyhgj-6b753-d6fsy-vzbgu-ir7x2-xprlw-z3e7u-bqe\")"
 ```

@@ -68,3 +68,6 @@ Please make sure your code adheres to the existing style and that you have teste
 ## **7. License**
 
 This project is licensed under the MIT License. See the `LICENSE` file for details.
+
+# **8. Logo Image Credit**
+<a href="https://www.flaticon.com/free-icons/tribenet" title="tribe.net icons">Tribe.net icons created by surang - Flaticon</a>

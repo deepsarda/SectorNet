@@ -1,3 +1,5 @@
+#![allow(warnings)] 
+
 use candid::{ CandidType, Deserialize, Principal };
 use ic_cdk::api::caller;
 use ic_cdk_macros::*;

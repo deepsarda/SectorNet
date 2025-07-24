@@ -1,3 +1,5 @@
+#![allow(warnings)]
+
 use candid::{ CandidType, Deserialize, Principal };
 use ic_cdk::api::time;
 use ic_cdk_macros::*;
@@ -190,7 +192,7 @@ fn is_admin(p: &Principal) -> bool {
 
 #[update]
 fn set_governance_canister(id: Principal) -> Result<(), String> {
-    let caller = ic_cdk::api::msg_caller();
+    let caller = ic_cdk::api::caller();
     if caller != OWNER.with(|o| *o.borrow()) {
         return Err("Unauthorized: Only owner can set governance ID.".to_string());
     }
@@ -204,7 +206,7 @@ fn set_governance_canister(id: Principal) -> Result<(), String> {
 
 #[update]
 fn submit_post_from_sector(post_data: SectorPostSubmission) -> Result<u64, String> {
-    let caller = ic_cdk::api::msg_caller();
+    let caller = ic_cdk::api::caller();
     if !VETTED_SECTORS.with(|s| s.borrow().contains_key(&caller)) {
         return Err("Unauthorized: Calling canister is not a vetted sector.".to_string());
     }
@@ -237,7 +239,7 @@ fn submit_direct_post(
     author_username: String,
     author_tag: UserTag
 ) -> Result<u64, String> {
-    let caller = ic_cdk::api::msg_caller();
+    let caller = ic_cdk::api::caller();
     let is_admin = is_admin(&caller);
     let is_global_poster = GLOBAL_POSTERS.with(|gp| gp.borrow().contains_key(&caller));
 
@@ -271,7 +273,7 @@ fn submit_direct_post(
 
 #[update]
 fn set_sector_vetted_status(sector_id: Principal, new_status: bool) -> Result<(), String> {
-    let caller = ic_cdk::api::msg_caller();
+    let caller = ic_cdk::api::caller();
     let owner = OWNER.with(|o| *o.borrow());
     let governance_id = GOVERNANCE_CANISTER_ID.with(|id| *id.borrow());
 
@@ -292,7 +294,7 @@ fn set_sector_vetted_status(sector_id: Principal, new_status: bool) -> Result<()
 
 #[update]
 fn add_global_poster(user: Principal) -> Result<(), String> {
-    if !is_admin(&ic_cdk::api::msg_caller()) {
+    if !is_admin(&ic_cdk::api::caller()) {
         return Err("Unauthorized".to_string());
     }
     GLOBAL_POSTERS.with(|gp| gp.borrow_mut().insert(user, ()));
@@ -301,7 +303,7 @@ fn add_global_poster(user: Principal) -> Result<(), String> {
 
 #[update]
 fn remove_global_poster(user: Principal) -> Result<(), String> {
-    if !is_admin(&ic_cdk::api::msg_caller()) {
+    if !is_admin(&ic_cdk::api::caller()) {
         return Err("Unauthorized".to_string());
     }
     GLOBAL_POSTERS.with(|gp| gp.borrow_mut().remove(&user));

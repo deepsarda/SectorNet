@@ -1,5 +1,7 @@
+#![allow(warnings)] 
+
 use candid::{ CandidType, Deserialize, Principal, Encode, Decode };
-use ic_cdk::api::msg_caller;
+use ic_cdk::api::caller;
 use ic_cdk_macros::*;
 use ic_stable_structures::memory_manager::{ MemoryId, MemoryManager, VirtualMemory };
 // Use the correct path for the 'Bound' enum
@@ -146,11 +148,11 @@ fn init(initial_owner: Principal, initial_factory: Principal) {
 }
 
 fn is_owner() -> Result<(), Error> {
-    if msg_caller() != OWNER.with(|o| *o.borrow()) { Err(Error::Unauthorized) } else { Ok(()) }
+    if caller() != OWNER.with(|o| *o.borrow()) { Err(Error::Unauthorized) } else { Ok(()) }
 }
 
 fn is_governance() -> Result<(), Error> {
-    if msg_caller() != GOVERNANCE_CANISTER_ID.with(|id| *id.borrow()) {
+    if caller() != GOVERNANCE_CANISTER_ID.with(|id| *id.borrow()) {
         Err(Error::Unauthorized)
     } else {
         Ok(())
@@ -172,7 +174,7 @@ fn set_factory_canister(id: Principal) -> Result<(), Error> {
 
 #[update]
 fn register_sector(info: SectorInfo) -> Result<(), Error> {
-    if msg_caller() != FACTORY_CANISTER_ID.with(|id| *id.borrow()) {
+    if caller() != FACTORY_CANISTER_ID.with(|id| *id.borrow()) {
         return Err(Error::Unauthorized);
     }
 
@@ -188,7 +190,7 @@ fn register_sector(info: SectorInfo) -> Result<(), Error> {
 
 #[update]
 fn update_sector_listing(info: SectorInfo) -> Result<(), Error> {
-    if msg_caller() != info.id {
+    if caller() != info.id {
         return Err(Error::Unauthorized);
     }
 

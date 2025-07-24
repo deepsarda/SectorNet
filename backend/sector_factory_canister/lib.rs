@@ -1,5 +1,7 @@
+#![allow(warnings)] 
+
 use candid::{ CandidType, Deserialize, Encode, Principal };
-use ic_cdk::api::{ msg_caller, time };
+use ic_cdk::api::{ caller, time };
 use ic_cdk_macros::*;
 use ic_stable_structures::memory_manager::{ MemoryId, MemoryManager, VirtualMemory };
 use ic_stable_structures::{ DefaultMemoryImpl, StableBTreeMap, Storable };
@@ -99,6 +101,7 @@ thread_local! {
     static SECTOR_WASM: RefCell<Vec<u8>> = RefCell::new(SECTOR_WASM_BYTES.to_vec());
     static REGISTRY_CANISTER_ID: RefCell<Option<Principal>> = RefCell::new(None);
     static INVITE_CANISTER_ID: RefCell<Option<Principal>> = RefCell::new(None);
+    static GLOBAL_FEED_CANISTER_ID: RefCell<Option<Principal>> = RefCell::new(None);
 }
 
 // Constants
@@ -114,6 +117,7 @@ struct NonStableState {
     owner: Option<Principal>,
     registry_canister_id: Option<Principal>,
     invite_canister_id: Option<Principal>,
+    global_feed_canister_id: Option<Principal>
 }
 
 #[pre_upgrade]
@@ -122,6 +126,7 @@ fn pre_upgrade() {
         owner: OWNER.with(|o| *o.borrow()),
         registry_canister_id: REGISTRY_CANISTER_ID.with(|id| *id.borrow()),
         invite_canister_id: INVITE_CANISTER_ID.with(|id| *id.borrow()),
+        global_feed_canister_id: GLOBAL_FEED_CANISTER_ID.with(|id| *id.borrow()),
     };
     ic_cdk::storage::stable_save((state,)).unwrap();
 }
@@ -138,6 +143,9 @@ fn post_upgrade() {
     INVITE_CANISTER_ID.with(|id| {
         *id.borrow_mut() = state.invite_canister_id;
     });
+    GLOBAL_FEED_CANISTER_ID.with(|id| {
+        *id.borrow_mut() = state.global_feed_canister_id;
+    });
 }
 
 // ==================================================================================================
@@ -152,7 +160,7 @@ fn init(initial_owner: Principal) {
 }
 
 fn is_owner() -> Result<(), Error> {
-    let caller = msg_caller();
+    let caller = caller();
     OWNER.with(|o| {
         match *o.borrow() {
             Some(owner) if owner == caller => Ok(()),
@@ -178,13 +186,22 @@ fn set_invite_canister(id: Principal) -> Result<(), Error> {
     Ok(())
 }
 
+#[update]
+fn set_global_feed_canister(id: Principal) -> Result<(), Error> {
+    is_owner()?;
+    GLOBAL_FEED_CANISTER_ID.with(|glo_id| {
+        *glo_id.borrow_mut() = Some(id);
+    });
+    Ok(())
+}
+
 // ==================================================================================================
 // === Core Public Function ===
 // ==================================================================================================
 
 #[update]
 async fn create_new_sector(config: SectorConfig) -> Result<Principal, Error> {
-    let caller = msg_caller();
+    let caller = caller();
     let now = time();
 
     // Authorization & Pre-condition Checks
@@ -203,6 +220,10 @@ async fn create_new_sector(config: SectorConfig) -> Result<Principal, Error> {
         Ok(())
     })?;
 
+    let invite_id = INVITE_CANISTER_ID.with(|id| id.borrow().clone()).ok_or_else(|| Error::ConfigError("Invite canister ID not configured in factory.".to_string()))?;
+    let global_feed_id = GLOBAL_FEED_CANISTER_ID.with(|id| id.borrow().clone()).ok_or_else(|| Error::ConfigError("Global Feed canister ID not configured in factory.".to_string()))?;
+    let user_id = caller;
+
     // Prepare canister settings
     let create_arg = CreateCanisterArgument { settings: Some(CanisterSettings {
             controllers: Some(vec![caller, ic_cdk::id()]), // Set creator and factory as controllers
@@ -214,6 +235,10 @@ async fn create_new_sector(config: SectorConfig) -> Result<Principal, Error> {
     
     let new_canister_id = canister_result.canister_id;
 
+    // Encode ALL the arguments required by the sector's init function.
+    let install_arg = Encode!(&config, &invite_id, &global_feed_id, &user_id)
+        .map_err(|e| Error::InstallFailed(format!("Failed to encode init arguments: {}", e)))?;
+
 
     // Install the SectorCanister code on the new instance
     let install_arg = Encode!(&config).map_err(|e| Error::InstallFailed(format!("Failed to encode arg: {}", e)))?;
@@ -223,8 +248,9 @@ async fn create_new_sector(config: SectorConfig) -> Result<Principal, Error> {
         wasm_module,
         arg: install_arg,
     };
+
     install_code(install_code_arg).await
-        .map_err(|(code, msg)| Error::InstallFailed(format!("Code {:?}: {}", code, msg)))?;
+        .map_err(|(code, msg)| Error::InstallFailed(format!("Install Failed Code {:?}: {}", code, msg)))?;
     
     // Register the new sector with the appropriate directory service
     if config.is_private {
