@@ -17,7 +17,7 @@ type SectorPostSubmission = record {
   author_principal : principal;
   author_username : text;
 };
-type SectorRole = variant { Poster; Member; Moderator };
+type SectorRole = variant { Poster; Member; Official; Moderator };
 type UserTag = variant { GlobalPoster; User; Admin };
 service : (principal) -> {
   add_global_poster : (principal) -> (Result);

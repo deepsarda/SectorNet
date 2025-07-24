@@ -6,7 +6,7 @@ import getUserProfile from '../../services/userCache';
 import cryptoService from '../../services/cryptoService';
 import { ShieldCheckIcon, ShieldExclamationIcon, KeyIcon } from '@heroicons/react/24/solid';
 import KeyRotationManager from './KeyRotationManager'; 
-
+import Markdown from 'react-markdown';
 const MessageItem = ({ message, isMe, securityModel, sectorId }) => {
   const [username, setUsername] = useState(() => isMe ? 'You' : '...');
   const [decryptedContent, setDecryptedContent] = useState('[Decrypting...]');
@@ -39,32 +39,10 @@ const MessageItem = ({ message, isMe, securityModel, sectorId }) => {
   return (
     <div className={`chat ${isMe ? 'chat-end' : 'chat-start'}`}>
       <div className="chat-header text-xs text-slate-500 mb-1">{username}<time className="ml-2">{date.toLocaleTimeString()}</time></div>
-      <div className={`chat-bubble ${isMe ? 'chat-bubble-primary bg-glassterm-accent text-black' : 'bg-slate-700'}`}>{decryptedContent}</div>
+      <div className={`chat-bubble ${isMe ? 'chat-bubble-primary bg-glassterm-accent text-black' : 'bg-slate-700'}`}><Markdown>{decryptedContent}</Markdown></div>
     </div>
   );
 };
-
-// DEV-ONLY COMPONENT
-const KeyManager = ({ sectorId }) => {
-  const [hasKey, setHasKey] = useState(!!cryptoService.getSectorKey(sectorId.toText(), 1));
-
-  const handleInstallKey = async () => {
-    const key = await cryptoService.generateSectorKey();
-    cryptoService.addSectorKey(sectorId.toText(), 1, key);
-    await cryptoService.saveKeystoreToStorage();
-    setHasKey(true);
-    alert(`Key for epoch 1 installed for sector ${sectorId.toText().substring(0,5)}...`);
-  };
-
-  return (
-    <div className="bg-orange-900/50 border border-orange-500 text-xs p-2 rounded-md my-2">
-      <p className="font-bold">[Dev Panel]</p>
-      <p>Sector requires an encryption key. Status: {hasKey ? "✅ Installed" : "❌ Missing"}</p>
-      {!hasKey && <button className="btn btn-xs mt-1" onClick={handleInstallKey}>Install Test Key</button>}
-    </div>
-  );
-}
-
 
 const ChatView = ({ channelName }) => {
   const { principal } = useAuthStore();

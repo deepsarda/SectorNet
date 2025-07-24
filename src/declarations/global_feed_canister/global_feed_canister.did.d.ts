@@ -25,6 +25,7 @@ export interface SectorPostSubmission {
 }
 export type SectorRole = { 'Poster' : null } |
   { 'Member' : null } |
+  { 'Official' : null } |
   { 'Moderator' : null };
 export type UserTag = { 'GlobalPoster' : null } |
   { 'User' : null } |

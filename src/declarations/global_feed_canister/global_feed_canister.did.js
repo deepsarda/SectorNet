@@ -3,6 +3,7 @@ export const idlFactory = ({ IDL }) => {
   const SectorRole = IDL.Variant({
     'Poster' : IDL.Null,
     'Member' : IDL.Null,
+    'Official' : IDL.Null,
     'Moderator' : IDL.Null,
   });
   const UserTag = IDL.Variant({

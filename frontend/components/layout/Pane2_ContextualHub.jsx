@@ -15,7 +15,8 @@ const Pane2_ContextualHub = () => {
 
   const baseClasses = "cursor-pointer hover:text-glassterm-accent transition-colors duration-150";
   const activeClasses = "text-glassterm-accent";
-
+  //TODO: Implement sector search for public sector and join it
+  //<p>&gt; Search For Sectors</p>
   const renderGlobalContext = () => (
     <>
       <p onClick={() => setContext('feed')} className={activeContext === 'feed' ? activeClasses : baseClasses}>&gt; Global Feed</p>

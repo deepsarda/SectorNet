@@ -23,10 +23,10 @@ const App = () => {
           return <MainLayout />;
         } else {
           // No profile found. They need to create one.
-          // Show the main layout dimmed in the background and the modal on top.
+          // Show the landing page dimmed in the background and the modal on top.
           return (
             <>
-              <MainLayout />
+              <LandingPage />
               <CreateProfileModal isVisible={true} />
             </>
           );
@@ -40,7 +40,7 @@ const App = () => {
   return (
     <main>
       <AnimatedBackground />
-      {renderContent()}
+      <div class="absolute top-0 left-0 h-screen w-screen">{renderContent()}</div>
     </main>
   );
 };

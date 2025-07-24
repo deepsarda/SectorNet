@@ -35,7 +35,7 @@ const Pane3_ContentDisplay = () => {
   };
 
   return (
-    <div className="h-full p-4 font-mono">
+    <div className="h-full p-4">
       {renderContent()}
     </div>
   );

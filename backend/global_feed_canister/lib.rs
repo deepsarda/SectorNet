@@ -18,6 +18,7 @@ pub enum SectorRole {
     Moderator,
     Poster,
     Member,
+    Official,
 }
 
 #[derive(CandidType, Deserialize, Clone)]
@@ -109,6 +110,29 @@ fn post_upgrade() {
 fn init(initial_owner: Principal) {
     OWNER.with(|o| *o.borrow_mut() = initial_owner);
     ADMINS.with(|a| a.borrow_mut().insert(initial_owner, ()));
+
+    // Create default welcome post
+    let default_post = GlobalPost {
+        id: 0,
+        author_principal: initial_owner,
+        author_username: "SectorNet".to_string(),
+        author_user_tag: Some(UserTag::Admin),
+        author_sector_role: Some(SectorRole::Official),
+        content_markdown: r#"👋 Welcome to **The Net**!
+
+This is your decentralized chatting network. Start exploring, and don't forget to check out the **Welcome Guide** to make the most of your experience.
+
+Enjoy your journey!"#.to_string(),
+        timestamp: time(),
+        origin_sector_id: None,
+    };
+
+    POSTS.with(|p| {
+        p.borrow_mut().insert(0, default_post);
+    });
+
+    NEXT_POST_ID.with(|id| *id.borrow_mut() = 1); // Ensure the next post ID is correct
+
 }
 
 // Helper to check if a principal is an admin.

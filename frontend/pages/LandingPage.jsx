@@ -12,7 +12,7 @@ const LandingPage = () => {
           <h1 className="text-5xl md:text-7xl font-bold text-slate-100 font-mono">
             SectorNet
           </h1>
-          <p className="py-6 text-lg text-slate-300">
+          <p className="py-6 text-xl text-slate-300">
             A decentralized communication platform. Your data, your communities, your control.
           </p>
           <button 

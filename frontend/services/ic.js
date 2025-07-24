@@ -33,7 +33,9 @@ const idlFactories = {
   governance_canister: governanceCanisterIdl,
 };
 
-const host = process.env.DFX_NETWORK === "ic" ? "https://icp-api.io" : "http://localhost:4943";
+let host = process.env.DFX_NETWORK === "ic" ? "https://icp-api.io" : "http://localhost:4943";
+
+if (process.env.GITHUB_HOSTING_URL) host = process.env.GITHUB_HOSTING_URL;
 
 /**
  * Creates an actor for a specified canister. This is the main function used by the stores.

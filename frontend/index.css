@@ -6,23 +6,25 @@
 /* Fira Code Font Import */
 @import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap");
 @theme {
-  /* -- FONT NAMESPACE -- */
   --font-mono: "Fira Code", monospace;
-  /* -- COLOR NAMESPACE -- */
-  /* These now generate classes like bg-glassterm-bg, text-glassterm-accent */
   --color-glassterm-bg: #0a041c;
-  --color-glassterm-panel: rgba(15, 23, 42, 0.4);
+  --color-glassterm-panel: rgba(15, 23, 42, 0.6);
   --color-glassterm-accent: #67e8f9;
-  /* cyan-300 */
   --color-glassterm-accent-secondary: #e879f9;
-  /* fuchsia-400 */
   --color-glassterm-border: rgba(103, 232, 249, 0.2);
-  /* -- ANIMATION NAMESPACE -- */
-  /* These now generate classes like animate-moveInCircle */
   --animate-moveInCircle: moveInCircle 30s ease infinite;
   --animate-moveVertical: moveVertical 40s ease infinite;
   --animate-moveHorizontal: moveHorizontal 25s ease infinite;
-  /* Keyframes are defined globally, not within @theme */
+
+  --goo-color-bg1: rgb(108, 0, 162);
+  --goo-color-bg2: rgb(0, 17, 82);
+  --goo-color1: 18, 113, 255;
+  --goo-color2: 221, 74, 255;
+  --goo-color3: 100, 220, 255;
+  --goo-color4: 200, 50, 50;
+  --goo-color5: 180, 180, 50;
+  --goo-blending: hard-light;
+  --goo-circle-size: 80%;
 }
 @keyframes moveInCircle {
   0% {
@@ -64,7 +66,6 @@ body {
   font-family: "Fira Code", monospace;
   font-optical-sizing: auto;
   font-style: normal;
-  background-color: var(--color-glassterm-bg);
   overflow: hidden;
   /* Prevent scrollbars from the background */
 }

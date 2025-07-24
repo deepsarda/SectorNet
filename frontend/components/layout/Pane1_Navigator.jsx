@@ -25,6 +25,11 @@ const Pane1_Navigator = () => {
           [G]
         </div>
       </div>
+      <div className="tooltip tooltip-right" data-tip="Create/Join Sector">
+        <div className="w-12 h-12 border-2 border-dashed border-slate-500 flex items-center justify-center font-bold text-lg mt-auto cursor-pointer hover:bg-slate-700 transition-colors">
+            [+]
+        </div>
+      </div>
       
       <div className="w-full border-b border-slate-700 my-2"></div>
 
@@ -43,10 +48,6 @@ const Pane1_Navigator = () => {
             </div>
           ))
         )}
-      </div>
-
-      <div className="w-12 h-12 border-2 border-dashed border-slate-500 flex items-center justify-center font-bold text-lg mt-auto cursor-pointer hover:bg-slate-700 transition-colors">
-        [+]
       </div>
     </div>
   );

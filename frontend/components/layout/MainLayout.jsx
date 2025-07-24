@@ -13,13 +13,9 @@ const MainLayout = () => {
   return (
     <div className="p-2 sm:p-4 md:p-8 h-screen w-screen flex items-center justify-center">
       <div className="mockup-window border bg-glassterm-panel border-glassterm-border shadow-2xl shadow-cyan-500/10 w-full h-full flex flex-col backdrop-blur-lg">
-        <div className="flex items-center justify-between px-4 py-2 bg-slate-800/80 border-b border-glassterm-border">
-          <div className="flex space-x-2">
-            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-          </div>
-          <div className="text-slate-300 hidden sm:block font-mono">SectorNet v1.1</div>
+        <div className="flex items-center justify-between px-4 py-2 bg-slate-800/20 border-b border-glassterm-border">
+          
+          <div className="text-slate-300 hidden sm:block font-mono">SectorNet</div>
           <div className="md:hidden">
             <button onClick={toggleMobileNav} className="text-slate-300">
               {isMobileNavOpen ? <XMarkIcon className="h-6 w-6" /> : <Bars3Icon className="h-6 w-6" />}

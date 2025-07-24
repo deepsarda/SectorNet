@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   base: './',
-  plugins: [tailwindcss(), react(), environment('all', { prefix: 'CANISTER_' }), environment('all', { prefix: 'DFX_' })],
+  plugins: [tailwindcss(), react(), environment('all', { prefix: 'CANISTER_' }), environment('all', { prefix: 'DFX_' }), environment('all', { prefix: 'GITHUB_' })],
   envDir: '../',
   define: {
     'process.env': process.env
