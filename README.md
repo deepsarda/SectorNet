@@ -2,8 +2,6 @@
 
 **Your data, your communities, your control.**
 
----
-
 ## **1. Introduction & Vision**
 
 SectorNet is a decentralized social communication platform architected entirely on the Internet Computer blockchain. It is born from the conviction that the future of online community should not be in the hands of centralized corporations, but in the hands of the users themselves. 
@@ -15,8 +13,6 @@ The project's vision is to create a ecosystem of interconnected, self-governed c
 *   **User Sovereignty & Ownership:** Users are identified by their self-custodied Internet Identity `Principal`. Content created by a user belongs to them; content created within a community belongs to that community.
 *   **Community-Led Governance:** SectorNet is designed to become a Decentralized Autonomous Organization (DAO). Its evolution, rules, and moderation are ultimately controlled by the community through on-chain voting and transparent proposals.
 *   **Privacy by Design:** The architecture prioritizes user privacy. Private communications can be end-to-end encrypted, and the platform minimizes the collection of user data to the absolute essentials.
-
----
 
 ## **2. Key Features**
 
@@ -32,52 +28,18 @@ The project's vision is to create a ecosystem of interconnected, self-governed c
 *   **Role-Based Permissions:** A powerful `[User Tag | Sector Role]` system separates global platform status from local community roles.
 *   **Spam & Sybil Resistance:** Built-in rate limiting on Sector creation and tenure-based requirements for governance participation.
 
----
 
 ## **3. Technology Stack**
 
-*   **Backend:** Rust, Motoko
+*   **Backend:** Rust
 *   **Blockchain:** The Internet Computer Protocol
 *   **Frontend:** React (Vite), TypeScript, Tailwind CSS
 *   **State Management:** Zustand
 *   **IC Communication:** `@dfinity/agent-js`
 
----
-
 ## **4. Getting Started**
 
-*(Instructions for developers to run the project locally. This assumes you have the DFINITY Canister SDK installed.)*
-
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-username/sectornet.git
-    cd sectornet
-    ```
-
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-
-3.  **Start a local IC replica:**
-    Open a new terminal window in the project directory and run:
-    ```bash
-    dfx start --clean --background
-    ```
-
-4.  **Deploy the canisters:**
-    ```bash
-    dfx deploy
-    ```
-
-5.  **Start the frontend development server:**
-    ```bash
-    npm run dev
-    ```
-
-You can now access the SectorNet frontend in your browser at the local address provided by the Vite server.
-
----
+See Build.md
 
 ## **5. Roadmap & Upcoming Features**
 
@@ -91,8 +53,6 @@ SectorNet is in active development. Here are the key features on our immediate r
 *   **Global Content Search:** A powerful search engine to find posts across the entire public Global Feed.
 *   **Unified Notification System:** A single, aggregated view for all mentions, replies, and other relevant events.
 
----
-
 ## **6. Contributing**
 
 We welcome contributions from the community! If you're interested in helping build the future of decentralized social media, please follow these steps:
@@ -104,8 +64,6 @@ We welcome contributions from the community! If you're interested in helping bui
 5.  Open a Pull Request.
 
 Please make sure your code adheres to the existing style and that you have tested your changes.
-
----
 
 ## **7. License**
 

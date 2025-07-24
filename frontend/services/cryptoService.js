@@ -1,4 +1,4 @@
-// --- Configuration ---
+// Configuration
 const IDENTITY_KEY_ALGO = {
   name: 'RSA-OAEP',
   modulusLength: 2048,
@@ -8,13 +8,13 @@ const IDENTITY_KEY_ALGO = {
 const SECTOR_KEY_ALGO = { name: 'AES-GCM', length: 256 };
 const STORAGE_KEY = 'sectornet_keystore';
 
-// --- Key Storage ---
+// Key Storage
 // This is our in-memory keystore.
 // We use Maps for easy lookups.
 let identityKeys = null; // { publicKey: CryptoKey, privateKey: CryptoKey }
 let sectorKeys = new Map(); // Map<sectorId: string, Map<epochId: number, sectorKey: CryptoKey>>
 
-// --- Helper Functions ---
+// Helper Functions
 // These are utility functions for converting between formats.
 const arrayBufferToBase64 = (buffer) => {
   let binary = '';
@@ -33,10 +33,10 @@ const base64ToArrayBuffer = (base64) => {
   return bytes.buffer;
 };
 
-// --- Core Service Object ---
+// Core Service Object
 const cryptoService = {
 
-  // --- Identity Key Management ---
+  // Identity Key Management
 
   /**
    * Generates a new RSA key pair for the user's identity.
@@ -69,7 +69,7 @@ const cryptoService = {
     return await window.crypto.subtle.importKey('jwk', jwk, IDENTITY_KEY_ALGO, true, usage);
   },
 
-  // --- Sector Key Management ---
+  // Sector Key Management
   
   generateSectorKey: async () => {
     return await window.crypto.subtle.generateKey(SECTOR_KEY_ALGO, true, ['encrypt', 'decrypt']);
@@ -109,7 +109,7 @@ const cryptoService = {
   },
 
 
-  // --- Encryption / Decryption ---
+  // Encryption / Decryption
 
   /**
    * Encrypts a message using a symmetric sector key.
@@ -155,7 +155,7 @@ const cryptoService = {
   },
 
 
-  // --- Persistence ---
+  // Persistence
 
   /**
    * Saves the entire keystore (identity and sector keys) to localStorage.

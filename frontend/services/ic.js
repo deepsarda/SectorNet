@@ -1,6 +1,6 @@
 import { Actor, HttpAgent } from "@dfinity/agent";
 
-// --- Import all generated Candid interfaces from the 'declarations' alias ---
+// Import all generated Candid interfaces from the 'declarations' alias
 // WARNING: This assumes `dfx generate backend` has been run successfully.
 import { idlFactory as userCanisterIdl } from 'declarations/user_canister';
 import { idlFactory as sectorFactoryCanisterIdl } from 'declarations/sector_factory_canister';

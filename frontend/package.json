@@ -15,6 +15,7 @@
 		"@dfinity/candid": "^3.0.0",
 		"@dfinity/principal": "^3.0.0",
 		"@heroicons/react": "^2.2.0",
+		"@vitejs/plugin-react": "^4.7.0",
 		"daisyui": "^5.0.46",
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",
@@ -22,7 +23,7 @@
 	},
 	"devDependencies": {
 		"@tailwindcss/typography": "^0.5.16",
-    "@tailwindcss/vite": "^4.1.11",
+		"@tailwindcss/vite": "^4.1.11",
 		"autoprefixer": "^10.4.21",
 		"postcss": "^8.5.6",
 		"prettier": "^3.6.2",

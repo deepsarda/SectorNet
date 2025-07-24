@@ -91,7 +91,7 @@ const useAuthStore = create((set, get) => ({
     }
   },
   
-  // --- The core of the crypto integration ---
+  // The core of the crypto integration
   createProfile: async (username) => {
     const { userCanister } = get();
     if (!userCanister) return { Err: "User canister not initialized." };

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 const useUiStore = create((set) => ({
-  // --- STATE ---
+  // STATE
 
   // Manages the slide-out menu on mobile viewports
   isMobileNavOpen: false,
@@ -15,7 +15,7 @@ const useUiStore = create((set) => ({
   activeContext: 'feed',
 
 
-  // --- ACTIONS ---
+  // ACTIONS
 
   // Toggles the mobile navigation pane
   toggleMobileNav: () => set(state => ({ isMobileNavOpen: !state.isMobileNavOpen })),

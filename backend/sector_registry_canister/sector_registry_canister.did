@@ -1,0 +1,18 @@
+type Error = variant { AlreadyRegistered; NotFound; Unauthorized };
+type Result = variant { Ok; Err : Error };
+type SectorInfo = record {
+  id : principal;
+  is_vetted : bool;
+  name : text;
+  description : text;
+  abbreviation : text;
+  member_count : nat64;
+};
+service : (principal, principal) -> {
+  get_vetted_sectors : () -> (vec SectorInfo) query;
+  register_sector : (SectorInfo) -> (Result);
+  search_sectors : (text) -> (vec SectorInfo) query;
+  set_factory_canister : (principal) -> (Result);
+  set_sector_vetted_status : (principal, bool) -> (Result);
+  update_sector_listing : (SectorInfo) -> (Result);
+}

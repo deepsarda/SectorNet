@@ -1,29 +1,22 @@
 # SectorNet Build Guide
 
-This document provides instructions on how to build and deploy the SectorNet application.
-
 ## Prerequisites
 
 *   [Node.js](https://nodejs.org/) (v16.x or later)
 *   [DFINITY Canister SDK](https://internetcomputer.org/docs/current/developer-docs/setup/install) (dfx)
-*   [Mops](https://mops.one/)
+*   [Rust](https://www.rust-lang.org/)
 
 ## Setup
 
 1.  **Clone the repository:**
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/deepsarda/SectorNet
     cd sectornet
     ```
 
 2.  **Install frontend dependencies:**
     ```bash
     npm install
-    ```
-
-3.  **Install Motoko dependencies:**
-    ```bash
-    mops install
     ```
 
 ## Local Development

@@ -16,7 +16,7 @@ const MessageItem = ({ message, isMe, securityModel, sectorId }) => {
       getUserProfile(message.author_principal).then(p => p && setUsername(p.username));
     }
     
-    // --- The Decryption Logic ---
+    // The Decryption Logic
     const decrypt = async () => {
       if (securityModel === 'HighSecurityE2EE') {
         const key = cryptoService.getSectorKey(sectorId.toText(), Number(message.key_epoch_id));
@@ -44,7 +44,7 @@ const MessageItem = ({ message, isMe, securityModel, sectorId }) => {
   );
 };
 
-// --- DEV-ONLY COMPONENT ---
+// DEV-ONLY COMPONENT
 const KeyManager = ({ sectorId }) => {
   const [hasKey, setHasKey] = useState(!!cryptoService.getSectorKey(sectorId.toText(), 1));
 

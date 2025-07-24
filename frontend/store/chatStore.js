@@ -10,7 +10,7 @@ import cryptoService from '../services/cryptoService';
 const MESSAGES_PER_PAGE = 30; // Number of messages to fetch when scrolling up
 
 const useChatStore = create((set, get) => ({
-  // --- STATE ---
+  // STATE
   messages: [], // Holds the messages for the active channel, sorted oldest to newest
   activeChannel: null, // The name of the currently viewed channel
   activeSectorId: null, // The principal ID of the sector this channel belongs to
@@ -22,7 +22,7 @@ const useChatStore = create((set, get) => ({
   hasOlderMessages: true, // Becomes false when a fetch returns fewer than a full page
   pollingIntervalId: null,// To hold the ID of our `setInterval` for cleanup
 
-  // --- ACTIONS ---
+  // ACTIONS
 
   // Called when a user clicks on a channel link.
   // It resets the state and fetches the first page of messages.

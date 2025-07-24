@@ -1,7 +1,0 @@
-# Motoko dependencies (https://mops.one/)
-
-[dependencies]
-base = "0.14.14"
-stableheapbtreemap = "1.5.0"   
-serde = "2.3.0"               
-itertools = "0.2.2"

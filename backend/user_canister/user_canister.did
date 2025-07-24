@@ -1,0 +1,29 @@
+type Error = variant {
+  InvalidInput : text;
+  NotFound;
+  Unauthorized;
+  AlreadyExists : text;
+};
+type Profile = record {
+  joined_sectors : vec principal;
+  username : text;
+  public_key : blob;
+  owner : principal;
+  tags : vec UserTag;
+  created_at : nat64;
+  last_seen_timestamp : nat64;
+};
+type Result = variant { Ok; Err : Error };
+type UserTag = variant { GlobalPoster; User; Admin };
+service : (principal) -> {
+  add_admin : (principal) -> (Result);
+  add_joined_sector : (principal) -> (Result);
+  create_profile : (text, blob) -> (Result);
+  get_admins : () -> (vec principal) query;
+  get_profile_by_principal : (principal) -> (opt Profile) query;
+  get_profile_by_username : (text) -> (opt Profile) query;
+  profile_exists : (principal) -> (bool) query;
+  remove_joined_sector : (principal) -> (Result);
+  set_user_tag : (principal, UserTag) -> (Result);
+  update_activity : () -> (Result);
+}

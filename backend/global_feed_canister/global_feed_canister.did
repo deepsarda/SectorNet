@@ -1,0 +1,31 @@
+type DirectPostSubmission = record { content_markdown : text };
+type GlobalPost = record {
+  id : nat64;
+  content_markdown : text;
+  origin_sector_id : opt principal;
+  author_sector_role : opt SectorRole;
+  author_principal : principal;
+  author_user_tag : opt UserTag;
+  timestamp : nat64;
+  author_username : text;
+};
+type Result = variant { Ok; Err : text };
+type Result_1 = variant { Ok : nat64; Err : text };
+type SectorPostSubmission = record {
+  content_markdown : text;
+  origin_sector_id : principal;
+  author_principal : principal;
+  author_username : text;
+};
+type SectorRole = variant { Poster; Member; Moderator };
+type UserTag = variant { GlobalPoster; User; Admin };
+service : (principal) -> {
+  add_global_poster : (principal) -> (Result);
+  get_global_feed : (nat64, nat64) -> (vec GlobalPost) query;
+  get_vetted_sectors : () -> (vec principal) query;
+  remove_global_poster : (principal) -> (Result);
+  set_governance_canister : (principal) -> (Result);
+  set_sector_vetted_status : (principal, bool) -> (Result);
+  submit_direct_post : (DirectPostSubmission, text, UserTag) -> (Result_1);
+  submit_post_from_sector : (SectorPostSubmission) -> (Result_1);
+}
