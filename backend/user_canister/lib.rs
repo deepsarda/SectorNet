@@ -1,5 +1,7 @@
+#![allow(warnings)] 
+
 use candid::{ CandidType, Deserialize, Principal, Encode, Decode };
-use ic_cdk::api::{ msg_caller, time };
+use ic_cdk::api::{ caller, time };
 use ic_cdk_macros::*;
 use ic_stable_structures::memory_manager::{ MemoryId, MemoryManager, VirtualMemory };
 use ic_stable_structures::{ DefaultMemoryImpl, StableBTreeMap, Storable };
@@ -152,7 +154,7 @@ fn init(initial_owner: Principal) {
 }
 
 fn is_admin() -> Result<(), Error> {
-    let caller = msg_caller();
+    let caller = caller();
     if ADMINS.with(|a| a.borrow().contains(&caller)) {
         Ok(())
     } else {
@@ -166,7 +168,7 @@ fn is_admin() -> Result<(), Error> {
 
 #[update]
 fn create_profile(username: String, public_key: Vec<u8>) -> Result<(), Error> {
-    let caller = msg_caller();
+    let caller = caller();
     let now = time();
 
     if caller == Principal::anonymous() {
@@ -199,7 +201,7 @@ fn create_profile(username: String, public_key: Vec<u8>) -> Result<(), Error> {
 
 #[update]
 fn add_joined_sector(sector_id: Principal) -> Result<(), Error> {
-    let caller = StorablePrincipal(msg_caller());
+    let caller = StorablePrincipal(caller());
     PROFILES.with(|p| {
         let mut profiles_map = p.borrow_mut();
         // **FIXED**: Must clone the profile to modify it, as `get` provides an immutable reference.
@@ -212,7 +214,7 @@ fn add_joined_sector(sector_id: Principal) -> Result<(), Error> {
 
 #[update]
 fn remove_joined_sector(sector_id: Principal) -> Result<(), Error> {
-    let caller = StorablePrincipal(msg_caller());
+    let caller = StorablePrincipal(caller());
     PROFILES.with(|p| {
         let mut profiles_map = p.borrow_mut();
         // **FIXED**: Must clone to modify
@@ -225,7 +227,7 @@ fn remove_joined_sector(sector_id: Principal) -> Result<(), Error> {
 
 #[update]
 fn update_activity() -> Result<(), Error> {
-    let caller = StorablePrincipal(msg_caller());
+    let caller = StorablePrincipal(caller());
     PROFILES.with(|p| {
         let mut profiles_map = p.borrow_mut();
         // **FIXED**: Must clone to modify

@@ -12,9 +12,6 @@ const WelcomeGuideView = () => (
       not to large corporations.
     </p>
     
-    <br />
-    <hr />
-    <br />
     <h2>Core Principles</h2>
     <ul>
       <li>
@@ -34,9 +31,7 @@ const WelcomeGuideView = () => (
         and minimal data collection.
       </li>
     </ul>
-    <br />
-    <hr />
-    <br />
+    
     <h2>Security: A Two-Tier Model</h2>
     <p>
       SectorNet offers two distinct security models for chat, allowing you to choose the right balance
@@ -65,9 +60,7 @@ const WelcomeGuideView = () => (
         ensuring only current members can view content. While not E2EE, this model is highly scalable and performant.
       </li>
     </ul>
-    <br />
-    <hr />
-    <br />
+    
     <h2>Governance: The SectorNet DAO</h2>
     <p>
       To ensure the platform remains in the hands of its users, SectorNet is governed by a DAO.

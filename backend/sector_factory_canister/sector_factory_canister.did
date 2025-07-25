@@ -19,6 +19,7 @@ type SectorConfig = record {
 };
 service : (principal) -> {
   create_new_sector : (SectorConfig) -> (Result);
+  set_global_feed_canister : (principal) -> (Result_1);
   set_invite_canister : (principal) -> (Result_1);
   set_registry_canister : (principal) -> (Result_1);
 }

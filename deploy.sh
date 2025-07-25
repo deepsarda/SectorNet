@@ -6,16 +6,13 @@ set -e
 # Preamble and Instructions
 echo -e "\033[1;32mStarting SectorNet Automated Deployment Script...\033[0m"
 echo "This script will deploy and configure all backend canisters in the correct order."
-echo "Make sure your local replica is running with 'dfx start --background --clean'"
+echo "Make sure your local replica is running with 'dfx start --background --clean --replica'"
 echo "--------------------------------------------------------------------"
 
 # Initial Build and Principal Fetch
 echo -e "\n\033[1;33mStep 0: Performing initial build and fetching your Principal ID...\033[0m"
 
 cargo build --package sector_canister --target wasm32-unknown-unknown --release
-
-# Build all rust canisters first to ensure the .wasm files are available
-cargo build --target wasm32-unknown-unknown --release
 
 dfx generate user_canister
 dfx generate sector_factory_canister
@@ -29,6 +26,7 @@ echo "✅ Type declarations & Wasm Modules generated successfully."
 
 # Get the principal of the currently selected identity
 export MY_PRINCIPAL=$(dfx identity get-principal)
+
 echo "✅ Deploying as owner: $MY_PRINCIPAL"
 
 # Deploy Core, Independent Canisters 
@@ -73,6 +71,12 @@ echo "  > Governance Canister ID: $GOVERNANCE_ID"
 echo "  > Linking factory to registry and invite canisters..."
 dfx canister call sector_factory_canister set_registry_canister "(principal \"$REGISTRY_ID\")"
 dfx canister call sector_factory_canister set_invite_canister "(principal \"$INVITE_ID\")"
+dfx canister call sector_factory_canister set_global_feed_canister "(principal \"$GLOBAL_FEED_ID\")"
+
+echo " > Adding Cycles to registry"
+dfx ledger fabricate-cycles --t 100 --canister $REGISTRY_ID
+echo "✅ Added Cycles complete."
+
 
 # Tell the global feed canister where the governance canister is
 echo "  > Linking global feed to governance canister..."
@@ -80,9 +84,6 @@ dfx canister call global_feed_canister set_governance_canister "(principal \"$GO
 
 echo "✅ Canister wiring complete."
 
-echo "Adding Cycles to registry"
-dfx ledger fabricate-cycles $REGISTRY_ID
-echo "✅ Added Cycles complete."
 # Deploy the Frontend
 echo -e "\n\033[1;33mStep 4: Deploying the frontend canister...\033[0m"
 
@@ -97,3 +98,5 @@ echo "--------------------------------------------------------------------"
 echo "You can now access the frontend at:"
 dfx canister id frontend | xargs -I {} echo "http://127.0.0.1:4943/?canisterId={}"
 echo "--------------------------------------------------------------------"
+
+dfx canister call global_feed_canister add_global_poster "(principal \"pgwnk-mbfq6-gge4j-qyhgj-6b753-d6fsy-vzbgu-ir7x2-xprlw-z3e7u-bqe\")"

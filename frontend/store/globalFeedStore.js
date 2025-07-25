@@ -11,6 +11,9 @@ const useGlobalFeedStore = create((set, get) => ({
   hasMore: true, // Assume there's more data until a fetch returns less than a full page
   error: null,
 
+  isSubmitting: false,
+  submissionError: null,
+
   // Fetches the very first page of the feed, replacing existing content
   fetchInitialFeed: async () => {
     // If we're already loading, don't do anything
@@ -85,8 +88,51 @@ const useGlobalFeedStore = create((set, get) => ({
       set({ error: errorMessage, isLoading: false });
       return { Err: errorMessage };
     }
+  },submitDirectPost: async (content_markdown) => {
+    const { identity, userProfile } = useAuthStore.getState();
+    if (!identity || !userProfile) {
+      return { Err: "User is not authenticated or has no profile." };
+    }
+
+    set({ isSubmitting: true, submissionError: null });
+    
+    try {
+      const actor = createActor('global_feed_canister', { agentOptions: { identity } });
+
+      // The backend expects the UserTag as a variant object, e.g., { Admin: null }
+      const author_tag = userProfile.tags.find(tag => 'Admin' in tag || 'GlobalPoster' in tag);
+      if (!author_tag) {
+        throw new Error("User does not have Admin or GlobalPoster tag.");
+      }
+
+      const postData = {
+        content_markdown,
+      };
+
+      const result = await actor.submit_direct_post(
+        postData,
+        userProfile.username,
+        author_tag
+      );
+
+      if ('Err' in result) {
+        throw new Error(result.Err);
+      }
+
+      // On success, refresh the entire feed to show the new post at the top
+      await get().fetchInitialFeed();
+      set({ isSubmitting: false });
+      return { Ok: result.Ok };
+
+    } catch (err) {
+      console.error("Error submitting direct post:", err);
+      const errorMessage = err.message || "Failed to submit post.";
+      set({ isSubmitting: false, submissionError: errorMessage });
+      return { Err: errorMessage };
+    }
   },
 }));
+
 
 
 export default useGlobalFeedStore;

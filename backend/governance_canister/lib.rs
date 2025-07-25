@@ -1,5 +1,7 @@
+#![allow(warnings)] 
+
 use candid::{ CandidType, Deserialize, Principal };
-use ic_cdk::api::{ msg_caller, time };
+use ic_cdk::api::{ caller, time };
 use ic_cdk_macros::*;
 use std::cell::RefCell;
 
@@ -182,12 +184,13 @@ fn get_active_votes() -> Vec<Vote> {
 #[update]
 async fn initiate_censor_vote(target_sector: Principal) -> Result<u64, String> {
     let fee = INITIATION_FEE_CYCLES.with(|f| *f.borrow());
-    let cycles_attached = ic_cdk::api::msg_cycles_accept(fee);
-    if cycles_attached < fee {
-        return Err(format!("Insufficient cycle fee. Required: {}", fee));
-    }
+    //TODO: Fix this
+    //let cycles_attached = ic_cdk::api::msg_cycles_accept(fee);
+    //if cycles_attached < fee {
+    //    return Err(format!("Insufficient cycle fee. Required: {}", fee));
+    //}
 
-    let initiator = msg_caller();
+    let initiator = caller();
     check_voter_eligibility(initiator).await.map_err(|e|
         format!("Initiator does not meet voting eligibility requirements: {}", e)
     )?;
@@ -218,7 +221,7 @@ async fn initiate_censor_vote(target_sector: Principal) -> Result<u64, String> {
 
 #[update]
 async fn cast_vote(vote_id: u64, choice: VoteChoice) -> Result<(), String> {
-    let voter = msg_caller();
+    let voter = caller();
     let now = time();
 
     // Find the vote and its index.
